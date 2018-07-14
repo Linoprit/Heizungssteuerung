@@ -1,0 +1,126 @@
+02.06.2018: flashen der bluepill.
+    Obviously there's the writeprotection enabled. Flashing with st-util fails with an errormessage, saying it cannot run the
+    flash_loader.c.
+    
+    console output:    
+    st-util 1.4.0-39-g6db0fc2
+    2018-06-02T15:33:55 INFO common.c: Loading device parameters....
+    2018-06-02T15:33:55 INFO common.c: Device connected is: F1 Medium-density device, id 0x20036410
+    2018-06-02T15:33:55 INFO common.c: SRAM size: 0x5000 bytes (20 KiB), Flash: 0x1904000 bytes (25616 KiB) in pages of 1024 bytes
+    2018-06-02T15:33:55 INFO gdb-server.c: Chip ID is 00000410, Core ID is  1ba01477.
+    2018-06-02T15:33:55 INFO gdb-server.c: Listening at *:4242...
+    2018-06-02T15:35:46 INFO gdb-server.c: Found 6 hw breakpoint registers
+    2018-06-02T15:35:46 INFO gdb-server.c: GDB connected.
+    2018-06-02T15:35:51 INFO common.c: Attempting to write 1024 (0x400) bytes to stm32 address: 134217728 (0x8000000)
+    Flash page at addr: 0x08000000 erased
+    2018-06-02T15:35:51 INFO common.c: Finished erasing 1 pages of 1024 (0x400) bytes
+    2018-06-02T15:35:51 INFO common.c: Starting Flash write for VL/F0/F3/F1_XL core id
+    2018-06-02T15:35:51 INFO flash_loader.c: Successfully loaded flash loader in sram
+    2018-06-02T15:35:54 ERROR flash_loader.c: flash loader run error
+    2018-06-02T15:35:54 ERROR common.c: stlink_flash_loader_run(0x8000000) failed! == -1
+
+    We remove the writeprotection with openocd:
+    (Refer to: https://github.com/rogerclarkmelbourne/Arduino_STM32/wiki/Programming-an-STM32F103XXX-with-a-generic-%22ST-Link-V2%22-programmer-from-Linux)
+    
+    install it to /opt:
+    cd /opt
+    mkdir openocd
+    git clone git://repo.or.cz/openocd.git
+    cd openocd
+    sudo apt-get install make libtool pkg-config autoconf automake texinfo libusb-1.0-0-dev
+    ./bootstrap
+    ./configure
+    make
+    sudo make install
+    
+    run openocd:
+    openocd -f /usr/local/share/openocd/scripts/interface/stlink.cfg -f /usr/local/share/openocd/scripts/target/stm32f1x.cfg 
+    
+    open a second console and enter:
+    telnet localhost 4444
+    
+    now remove writeprotection:
+    reset halt
+    stm32f1x unlock 0
+    reset halt
+    
+    OK. From now on you can use st-util for flahsing and debugging.
+    
+    ----
+    reset the st-link:
+    openocd -f /usr/local/share/openocd/scripts/interface/stlink.cfg -f /usr/local/share/openocd/scripts/target/stm32f1x.cfg -c init -c targets -c "halt" -c "reset run" -c shutdown
+    
+    st-flash --reset write Heizungssteuerung.bin 0x08000000
+
+    
+    
+-----------------------------------------------------------------------
+UART Line-Idle Interrupt:
+
+https://community.st.com/thread/41068-cubemx-feature-request-add-usart-rx-idle-handling
+
+stm32f1xx_hal_uart.h gets an added function declaration at line 661:
+
+    void HAL_UART_RxIdleCallback(UART_HandleTypeDef *huart);
+
+    
+stm32f1xx_hal_uart.c gets the following additions:
+HAL_UART_IRQHandler(), line 1563, gets an additional interrupt flag handler:
+
+    uint32_t tmp_flag = __HAL_UART_GET_FLAG(huart, UART_FLAG_IDLE);
+    uint32_t tmp_it_source = __HAL_UART_GET_IT_SOURCE(huart, UART_IT_IDLE);
+    /* UART RX Idle interrupt --------------------------------------------*/
+    if((tmp_flag != RESET) && (tmp_it_source != RESET))
+    {
+        __HAL_UART_CLEAR_IDLEFLAG(huart);
+        HAL_UART_RxIdleCallback(huart);
+    }
+ 
+
+And a default idle callback handler is added as well, line 1686:
+
+    /**
+    * @brief  Rx idle callback.
+    * @param  huart: Pointer to a UART_HandleTypeDef structure that contains
+    *                the configuration information for the specified UART module.
+    * @retval None
+    */
+    __weak void HAL_UART_RxIdleCallback(UART_HandleTypeDef *huart)
+    {
+    /* Prevent unused argument(s) compilation warning */
+    UNUSED(huart);
+    /* NOTE: This function should not be modified, when the callback is needed,
+            the HAL_UART_RxIdleCallback can be implemented in the user file
+    */
+    }
+
+
+Configure RX DMA to circular mode. 
+In callbacks.cpp add a ISR-handler:
+
+void HAL_UART_RxIdleCallback(UART_HandleTypeDef *huart)
+{
+  call_uart_callbacks(huart); // calls the uart_socket::isr-callback
+}
+
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
