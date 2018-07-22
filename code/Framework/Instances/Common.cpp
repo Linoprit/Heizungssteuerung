@@ -10,11 +10,17 @@
 #include "stm32f1xx_hal.h"
 #include "main.h"
 #include "Instances/callbacks.h"
+#include "cmsis_os.h"
+
 
 
 SoftwareEvents*			Common::sw_events 		= new SoftwareEvents();
+uart_socket*			Common::display_comm	= NULL;
+uart_socket*			Common::errorMsg_comm	= NULL;
+//errorMsgTask*	  		Common::errorMsg_tsk	= NULL;
 nextion*				Common::nex_disp		= NULL;
 Heiz_display*			Common::heiz_disp		= NULL;
+Error_messaging*		Common::error_msg		= NULL;
 
 
 // Workaround undefined reference error
@@ -28,14 +34,18 @@ void common_init(void)	{ Common::init(); }
 void Common::init()
 {
 #ifdef TRACE
-  Error_messaging::init_debug_comm(get_huart1());
+  errorMsg_comm = new uart_socket(get_huart1(), get_errorMsgTask());
+  error_msg		= new Error_messaging(errorMsg_comm);
+  //errorMsg_tsk  = new errorMsgTask();
 #endif /* TRACE */
 
-  nex_disp  = new nextion(get_huart3());
-  heiz_disp = new Heiz_display();
 
+  display_comm = new uart_socket(get_huart3(), get_displayTask() );
+  nex_disp     = new nextion(display_comm);
+  heiz_disp    = new Heiz_display();
 
-
+  // Workaround...
+  //osSignalSet (*get_displayTask(), 0);
 
 
 }

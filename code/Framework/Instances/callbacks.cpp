@@ -78,6 +78,11 @@ void call_uart_callbacks(UART_HandleTypeDef *huart)
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
+
+  // TODO remove
+  HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+
+  // TODO some overflow handler?
   call_uart_callbacks(huart);
 }
 

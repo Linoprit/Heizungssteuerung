@@ -74,12 +74,12 @@ osStaticThreadDef_t controlTskControlBlock;
 osThreadId displayTskHandle;
 uint32_t displayTskBuffer[ 128 ];
 osStaticThreadDef_t displayTskControlBlock;
-osThreadId dspCallbackTskHandle;
-uint32_t dspCallbackTskBuffer[ 128 ];
-osStaticThreadDef_t dspCallbackTskControlBlock;
-osThreadId uartTskHandle;
-uint32_t uartTskBuffer[ 128 ];
-osStaticThreadDef_t uartTskControlBlock;
+osThreadId errorMsgTskHandle;
+uint32_t errorMsgTskBuffer[ 128 ];
+osStaticThreadDef_t errorMsgTskControlBlock;
+osThreadId aliveTskHandle;
+uint32_t aliveTskBuffer[ 128 ];
+osStaticThreadDef_t aliveTskControlBlock;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
@@ -95,8 +95,8 @@ static void MX_USART1_UART_Init(void);
 static void MX_USART3_UART_Init(void);
 void StartControlTsk(void const * argument);
 extern void StartDisplayTsk(void const * argument);
-extern void StartDspCallbackTsk(void const * argument);
-extern void StartUartTsk(void const * argument);
+extern void StartErrorMsgTsk(void const * argument);
+extern void StartAliveTsk(void const * argument);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
@@ -109,6 +109,11 @@ UART_HandleTypeDef* get_huart1(void) 	{ return &huart1; }
 UART_HandleTypeDef* get_huart3(void) 	{ return &huart3; }
 
 RTC_HandleTypeDef*	get_rtc(void) 		{ return &hrtc;	  }
+
+osThreadId* 		get_controlTask(void)		{ return &controlTskHandle; }
+osThreadId* 		get_displayTask(void)		{ return &displayTskHandle;}
+osThreadId* 		get_errorMsgTask(void)		{ return &errorMsgTskHandle;}
+osThreadId* 		get_aliveTask(void)			{ return &aliveTskHandle; }
 
 /* USER CODE END 0 */
 
@@ -147,7 +152,7 @@ int main(void)
   MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
 
-  common_init();
+  //common_init();
 
   /* USER CODE END 2 */
 
@@ -165,20 +170,20 @@ int main(void)
 
   /* Create the thread(s) */
   /* definition and creation of controlTsk */
-  osThreadStaticDef(controlTsk, StartControlTsk, osPriorityNormal, 0, 128, controlTskBuffer, &controlTskControlBlock);
+  osThreadStaticDef(controlTsk, StartControlTsk, osPriorityRealtime, 0, 128, controlTskBuffer, &controlTskControlBlock);
   controlTskHandle = osThreadCreate(osThread(controlTsk), NULL);
 
   /* definition and creation of displayTsk */
-  osThreadStaticDef(displayTsk, StartDisplayTsk, osPriorityLow, 0, 128, displayTskBuffer, &displayTskControlBlock);
+  osThreadStaticDef(displayTsk, StartDisplayTsk, osPriorityNormal, 0, 128, displayTskBuffer, &displayTskControlBlock);
   displayTskHandle = osThreadCreate(osThread(displayTsk), NULL);
 
-  /* definition and creation of dspCallbackTsk */
-  osThreadStaticDef(dspCallbackTsk, StartDspCallbackTsk, osPriorityIdle, 0, 128, dspCallbackTskBuffer, &dspCallbackTskControlBlock);
-  dspCallbackTskHandle = osThreadCreate(osThread(dspCallbackTsk), NULL);
+  /* definition and creation of errorMsgTsk */
+  osThreadStaticDef(errorMsgTsk, StartErrorMsgTsk, osPriorityIdle, 0, 128, errorMsgTskBuffer, &errorMsgTskControlBlock);
+  errorMsgTskHandle = osThreadCreate(osThread(errorMsgTsk), NULL);
 
-  /* definition and creation of uartTsk */
-  osThreadStaticDef(uartTsk, StartUartTsk, osPriorityIdle, 0, 128, uartTskBuffer, &uartTskControlBlock);
-  uartTskHandle = osThreadCreate(osThread(uartTsk), NULL);
+  /* definition and creation of aliveTsk */
+  osThreadStaticDef(aliveTsk, StartAliveTsk, osPriorityNormal, 0, 128, aliveTskBuffer, &aliveTskControlBlock);
+  aliveTskHandle = osThreadCreate(osThread(aliveTsk), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -186,6 +191,9 @@ int main(void)
 
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
+
+  common_init();
+
   /* USER CODE END RTOS_QUEUES */
  
 
@@ -410,7 +418,11 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, LED_04_Pin|LED_03_Pin|LED_02_Pin|LED_01_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(LED_08_GPIO_Port, LED_08_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, LED_07_Pin|LED_06_Pin|LED_05_Pin|LED_04_Pin 
+                          |LED_03_Pin|LED_02_Pin|LED_01_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : LED_Pin */
   GPIO_InitStruct.Pin = LED_Pin;
@@ -419,8 +431,17 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LED_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : LED_04_Pin LED_03_Pin LED_02_Pin LED_01_Pin */
-  GPIO_InitStruct.Pin = LED_04_Pin|LED_03_Pin|LED_02_Pin|LED_01_Pin;
+  /*Configure GPIO pin : LED_08_Pin */
+  GPIO_InitStruct.Pin = LED_08_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(LED_08_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : LED_07_Pin LED_06_Pin LED_05_Pin LED_04_Pin 
+                           LED_03_Pin LED_02_Pin LED_01_Pin */
+  GPIO_InitStruct.Pin = LED_07_Pin|LED_06_Pin|LED_05_Pin|LED_04_Pin 
+                          |LED_03_Pin|LED_02_Pin|LED_01_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;

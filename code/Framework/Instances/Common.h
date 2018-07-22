@@ -9,6 +9,7 @@
 #define COMMON_H_
 
 #include "stm32f1xx_hal.h"
+#include "cmsis_os.h"
 
 
 // C interface
@@ -22,6 +23,10 @@ EXTERNC void common_init(void);
 EXTERNC UART_HandleTypeDef* get_huart1(void);
 EXTERNC UART_HandleTypeDef* get_huart3(void);
 EXTERNC RTC_HandleTypeDef*  get_rtc(void)   ;
+EXTERNC osThreadId* 		get_controlTask(void) ;
+EXTERNC osThreadId* 		get_displayTask(void) ;
+EXTERNC osThreadId* 		get_errorMsgTask(void);
+
 
 #undef EXTERNC
 
@@ -29,8 +34,10 @@ EXTERNC RTC_HandleTypeDef*  get_rtc(void)   ;
 
 // put cpp includes here!!
 #include <System/SoftwareEvents.h>
-#include <Devices/Nextion/Nextion_display.h>
+#include <Devices/Nextion/Nextion_device.h>
 #include <Devices/Nextion/heiz_display.h>
+#include <Tasks/errorMsgTask.h>
+
 
 
 class Common
@@ -48,9 +55,19 @@ public:
   static inline void delay(uint32_t delay)
   { HAL_Delay(delay); }
 
+  // sockets
+  static uart_socket	*display_comm;
+  static uart_socket	*errorMsg_comm;
+
   // public Devices
-  static nextion	  *nex_disp;
-  static Heiz_display *heiz_disp;
+  static nextion	  	*nex_disp;
+  static Heiz_display 	*heiz_disp;
+
+  // Task Classes
+  //static errorMsgTask 	*errorMsg_tsk;
+
+  // system Class
+  static Error_messaging *error_msg;
 
 private:
  /* static void init_comm_layer(void);

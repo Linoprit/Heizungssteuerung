@@ -13,8 +13,12 @@
 
 #include "Instances/Common.h"
 
-
-uart_socket::uart_socket (UART_HandleTypeDef *huart)
+/**
+ * We need osTreadId to be passed as function pointer, because sockets
+ * are initialized before the threads.
+ */
+uart_socket::uart_socket (UART_HandleTypeDef *huart,
+						  osThreadId* task_to_notify )
 {
   this->huart 	= huart;
   rx_ringbuffer = new simpleRingbuffer(simpleRingbuffer_len);
@@ -31,10 +35,7 @@ uart_socket::uart_socket (UART_HandleTypeDef *huart)
   uart_callback_add(huart, (ISR_callback*) this);
   HAL_UART_Receive_DMA(this->huart, uart_rx_buffer, UART_RX_BUFF_LEN);
 
-}
-
-uart_socket::~uart_socket ()
-{
+  this->task_to_notify = task_to_notify;
 }
 
 bool uart_socket::send_byte(uint8_t byte)
@@ -42,14 +43,29 @@ bool uart_socket::send_byte(uint8_t byte)
   return send_many_bytes(&byte, 1);
 }
 
-bool uart_socket::send_many_bytes(uint8_t *ptr_to_data, uint8_t len)
+bool uart_socket::send_many_bytes(
+	uint8_t *ptr_to_data, uint8_t len, uint16_t timeout)
 {
+  uint16_t count = 0;
   HAL_UART_StateTypeDef uart_status = HAL_UART_GetState(huart);
 
-  if ( ( (uart_status != HAL_UART_STATE_READY) &&
-	  (uart_status != HAL_UART_STATE_BUSY_RX) ) ||
-	  (len > UART_TX_BUFF_LEN) )
+  if (len > UART_TX_BUFF_LEN)
 	return ERROR;
+
+
+  while ( ( (uart_status != HAL_UART_STATE_READY) &&
+	  (uart_status != HAL_UART_STATE_BUSY_RX) )  )
+	{
+	  if(count >= timeout)
+		{
+		  return ERROR;
+		}
+
+	  osDelay(1);
+	  count++;
+	  uart_status = HAL_UART_GetState(huart);
+	}
+
 
   // copy dynamic content to static buffer
   for (uint8_t i=0; i < len; i++)
@@ -82,9 +98,6 @@ simpleRingbuffer* uart_socket::get_rx_ringbuffer()
  */
 void uart_socket::ISR_callback_fcn ()
 {
-
-  //HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
-
   uint8_t i=0;
   uint16_t rxXferCount = 0;
   if(huart->hdmarx != NULL)
@@ -96,27 +109,30 @@ void uart_socket::ISR_callback_fcn ()
 	  HAL_DMA_Abort(huart->hdmarx);
 	  huart->RxXferCount = 0;
 
-	  /* Check if a transmit process is ongoing or not */
-
+	  // Check if a transmit process is ongoing or not
 	  //FIXME has no effect!!
 	  HAL_UART_StateTypeDef usart_status = HAL_UART_GetState(huart);
 	  if(usart_status == HAL_UART_STATE_BUSY_TX_RX)
 		{
-		  usart_status = HAL_UART_STATE_BUSY_TX;
+		  //usart_status = HAL_UART_STATE_BUSY_TX;
+		  huart->gState = HAL_UART_STATE_BUSY_TX;
+		  huart->RxState = HAL_UART_STATE_READY;
 		}
 	  else
 		{
-		  usart_status = HAL_UART_STATE_READY;
+		  //usart_status = HAL_UART_STATE_READY;
+		  huart->gState = HAL_UART_STATE_READY;
+		  huart->RxState = HAL_UART_STATE_READY;
 		}
 	}
 
   // copy uart-buffer to ringbuffer
   for (i = 0; i < rxXferCount; i++)
 	{
-	  if (uart_rx_buffer[i] == RX_PAD_CHAR)
+	  /*if (uart_rx_buffer[i] == RX_PAD_CHAR)
 		{
 		  continue;
-		}
+		}*/
 	  rx_ringbuffer->Write(uart_rx_buffer[i]);
 	}
 
@@ -124,6 +140,8 @@ void uart_socket::ISR_callback_fcn ()
   memset(uart_rx_buffer, RX_PAD_CHAR, UART_RX_BUFF_LEN);
 
   HAL_UART_Receive_DMA(this->huart, uart_rx_buffer, UART_RX_BUFF_LEN);
+  // notify the controlling task, that data has arrived
+  osSignalSet (*task_to_notify, 0);
 }
 
 

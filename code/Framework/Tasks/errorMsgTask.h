@@ -8,6 +8,11 @@
 #ifndef SYSTEM_dspCallbackTask_H_
 #define SYSTEM_dspCallbackTask_H_
 
+/**
+ * Used as link between C-call from main to Start...Task().
+ * Does not need to be instantiated, if no use of C++ calls to other
+ * classes is done.
+ */
 
 // C interface
 #ifdef __cplusplus
@@ -16,7 +21,7 @@
 #define EXTERNC
 #endif
 
-EXTERNC void StartDspCallbackTsk(void const * argument);
+EXTERNC void StartErrorMsgTsk(void const * argument);
 
 #undef EXTERNC
 
@@ -25,13 +30,13 @@ EXTERNC void StartDspCallbackTsk(void const * argument);
 // put cpp includes here!!
 
 
-class dspCallbackTask
+class errorMsgTask
 {
 public:
-  dspCallbackTask ();
-  virtual ~dspCallbackTask () {};
+  errorMsgTask ();
+  virtual ~errorMsgTask () {};
 
-  static void StartDspCallbackTsk(void const * argument);
+  static void StartErrorMsgTsk(void const * argument);
 };
 
 #endif // C interface

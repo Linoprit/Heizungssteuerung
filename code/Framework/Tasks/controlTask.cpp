@@ -28,9 +28,10 @@ void controlTask::StartControlTsk(void const * argument)
 
   for(;;)
 	{
-	  osDelay(100);
-	  HAL_GPIO_TogglePin(LED_01_GPIO_Port, LED_01_Pin);
 
-	  //Common::heiz_disp->loop();
+	  HAL_GPIO_TogglePin(LED_01_GPIO_Port, LED_01_Pin);
+	  osDelay(100);
+
+
 	}
 }
