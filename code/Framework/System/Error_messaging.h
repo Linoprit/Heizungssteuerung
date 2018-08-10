@@ -11,10 +11,13 @@
 #include "stm32f1xx_hal.h"
 #include "Sockets/uart_socket.h"
 #include "string.h"
-#include "libraries/Arduino/WString.h"
+
 
 
 #ifdef TRACE
+
+#define INPUT_BUFF_LEN 20
+
 
 class Error_messaging
 {
@@ -22,16 +25,23 @@ public:
   Error_messaging (uart_socket* socket);
   virtual ~Error_messaging () {};
 
-  uart_socket* get_debug_comm(void);
+  uart_socket*   get_debug_comm(void);
   static size_t  write(const char* buf, size_t nbyte);
   static size_t  write(const char* buf);
-  void 	 print_hal_status(HAL_StatusTypeDef status);
+  static void	 input_loop(void);
 
-  static void num2str(String *msg_str, uint32_t number);
+  void 	         print_hal_status(HAL_StatusTypeDef status);
+
+
+
 
 private:
   static uart_socket*	socket;
   const static uint8_t 	timeout = 10;
+
+  static char	 input_buff[INPUT_BUFF_LEN];
+  static uint8_t cursor;
+
 };
 
 // C-interface

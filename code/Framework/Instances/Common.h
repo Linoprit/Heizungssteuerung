@@ -35,7 +35,9 @@ EXTERNC osThreadId* 		get_errorMsgTask(void);
 // put cpp includes here!!
 #include <System/SoftwareEvents.h>
 #include <Devices/Nextion/Nextion_device.h>
-#include <Devices/Nextion/heiz_display.h>
+#include "../Application/heiz_display.h"
+#include <Devices/Realtime_clock/rtc_device.h>
+#include <../Application/State_Machine.h>
 #include <Tasks/errorMsgTask.h>
 
 
@@ -61,7 +63,11 @@ public:
 
   // public Devices
   static nextion	  	*nex_disp;
+  static Rtc_device 	*rtc;
+
+  // application Classes
   static Heiz_display 	*heiz_disp;
+  static State_Machine	*machine;
 
   // Task Classes
   //static errorMsgTask 	*errorMsg_tsk;

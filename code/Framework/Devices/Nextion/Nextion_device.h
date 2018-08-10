@@ -26,7 +26,7 @@ public:
   size_t  write(const char* buf, size_t nbyte);
   size_t  readBytes(char* buffer, size_t nbyte);
   uint8_t read(void);
-  bool 	  data_arrived(uint8_t expected_amount);
+  bool 	  wait_for_data(uint8_t expected_amount);
   uint8_t available(void);
 
   inline void setTimeout(uint32_t timeout)

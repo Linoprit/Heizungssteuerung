@@ -22,14 +22,13 @@ void StartErrorMsgTsk(void const * argument)
 
   for(;;)
 	{
-	  //osDelay(400);
 	  osSignalWait (0, osWaitForever);
-
-	  Error_messaging::write("errorTask\n");
+	  //osDelay(200);
 
 	  HAL_GPIO_TogglePin(LED_04_GPIO_Port, LED_04_Pin);
 
-	 //Error_messaging::write("Message from task\n", 18);
+	  Common::error_msg->input_loop();
+	  //Error_messaging::write("errorTask\n");
 	}
 
 }

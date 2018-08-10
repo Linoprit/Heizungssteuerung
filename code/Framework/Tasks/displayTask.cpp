@@ -31,10 +31,13 @@ void displayTask::StartDisplayTsk(void const * argument)
   for(;;)
 	{
 	  // wait for task-notification
-	  osSignalWait(0, osWaitForever);
+	  osSignalWait(0, 1000);//osWaitForever);
 
 	  if (Common::heiz_disp != NULL)
 		Common::heiz_disp->loop();
+
+	  // TODO push values to display
+
 
 	  HAL_GPIO_TogglePin(LED_02_GPIO_Port, LED_02_Pin);
 	}

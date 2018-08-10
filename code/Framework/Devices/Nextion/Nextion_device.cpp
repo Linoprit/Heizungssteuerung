@@ -29,7 +29,7 @@ size_t nextion::write(const char* buf, size_t nbyte)
   return 0;
 }
 
-bool nextion::data_arrived(uint8_t expected_amount)
+bool nextion::wait_for_data(uint8_t expected_amount)
 {
   uint8_t count = socket->get_rx_ringbuffer()->Count();
   uint32_t timeout_tick = Common::get_tick() + timeout;
@@ -51,7 +51,7 @@ size_t nextion::readBytes(char* buffer, size_t nbyte)
   uint8_t count = 0;
   simpleRingbuffer* rx_buffer = socket->get_rx_ringbuffer();
 
-  if (!data_arrived(nbyte))
+  if (!wait_for_data(nbyte))
 	return 0;
 
   while(rx_buffer->HasData())
@@ -78,9 +78,6 @@ uint8_t nextion::read(void)
 
 uint8_t nextion::available(void)
 {
-  // if (!data_arrived(1))
-  //	return 0;
-
   if(!socket->get_rx_ringbuffer()->HasData())
 	return 0;
 

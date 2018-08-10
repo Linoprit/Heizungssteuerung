@@ -358,7 +358,7 @@ static void MX_USART3_UART_Init(void)
 {
 
   huart3.Instance = USART3;
-  huart3.Init.BaudRate = 115200;
+  huart3.Init.BaudRate = 9600;
   huart3.Init.WordLength = UART_WORDLENGTH_8B;
   huart3.Init.StopBits = UART_STOPBITS_1;
   huart3.Init.Parity = UART_PARITY_NONE;
@@ -418,11 +418,11 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(LED_08_GPIO_Port, LED_08_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(Pump_2_GPIO_Port, Pump_2_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, LED_07_Pin|LED_06_Pin|LED_05_Pin|LED_04_Pin 
-                          |LED_03_Pin|LED_02_Pin|LED_01_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, Pump_1_Pin|LED_05_Pin|LED_04_Pin|LED_03_Pin 
+                          |LED_02_Pin|LED_01_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : LED_Pin */
   GPIO_InitStruct.Pin = LED_Pin;
@@ -431,21 +431,27 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LED_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : LED_08_Pin */
-  GPIO_InitStruct.Pin = LED_08_Pin;
+  /*Configure GPIO pin : Pump_2_Pin */
+  GPIO_InitStruct.Pin = Pump_2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(LED_08_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(Pump_2_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : LED_07_Pin LED_06_Pin LED_05_Pin LED_04_Pin 
-                           LED_03_Pin LED_02_Pin LED_01_Pin */
-  GPIO_InitStruct.Pin = LED_07_Pin|LED_06_Pin|LED_05_Pin|LED_04_Pin 
-                          |LED_03_Pin|LED_02_Pin|LED_01_Pin;
+  /*Configure GPIO pins : Pump_1_Pin LED_05_Pin LED_04_Pin LED_03_Pin 
+                           LED_02_Pin LED_01_Pin */
+  GPIO_InitStruct.Pin = Pump_1_Pin|LED_05_Pin|LED_04_Pin|LED_03_Pin 
+                          |LED_02_Pin|LED_01_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : DayNight_Pin */
+  GPIO_InitStruct.Pin = DayNight_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(DayNight_GPIO_Port, &GPIO_InitStruct);
 
 }
 

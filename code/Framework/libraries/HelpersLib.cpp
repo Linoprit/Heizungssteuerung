@@ -161,3 +161,10 @@ void HelpersLib::value2char(
 
   return;
 }
+
+void HelpersLib::num2str(String* msg_str, uint32_t number)
+{
+  char buf[10] = {0};
+  utoa(number, buf, 10);
+  *msg_str += buf;
+}

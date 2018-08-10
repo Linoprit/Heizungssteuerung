@@ -9,6 +9,8 @@
 #include "cmsis_os.h"
 #include <Instances/Common.h>
 #include <Tasks/controlTask.h>
+#include <Devices/Realtime_clock/rtc_device.h>
+
 
 // C interface
 void StartControlTsk(void const * argument)
@@ -29,8 +31,10 @@ void controlTask::StartControlTsk(void const * argument)
   for(;;)
 	{
 
+	  Common::machine->loop();
+
 	  HAL_GPIO_TogglePin(LED_01_GPIO_Port, LED_01_Pin);
-	  osDelay(100);
+	  osDelay(1000);
 
 
 	}

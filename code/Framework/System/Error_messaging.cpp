@@ -8,11 +8,14 @@
 #include <errno.h>
 #include <System/Error_messaging.h>
 #include "Instances/Common.h"
+#include <libraries/HelpersLib.h>
 
 
 #ifdef TRACE
 
 uart_socket*	Error_messaging::socket		= NULL;
+char			Error_messaging::input_buff[INPUT_BUFF_LEN];
+uint8_t 		Error_messaging::cursor		= 0;
 
 
 
@@ -73,11 +76,42 @@ void Error_messaging::print_hal_status(HAL_StatusTypeDef status)
   }
 }
 
-void Error_messaging::num2str(String* msg_str, uint32_t number)
+void Error_messaging::input_loop(void)
 {
-  char buf[10] = {0};
-  utoa(number, buf, 10);
-  *msg_str += buf;
+  char byte;
+  uint8_t i;
+
+  while(socket->get_rx_ringbuffer()->Count() > 0)
+	{
+	  byte = socket->get_rx_ringbuffer()->Read();
+
+	  if((uint8_t) byte == 13)
+		{
+
+		  // TODO process input
+		  Error_messaging::write(input_buff, cursor);
+		  Error_messaging::write("\n");
+
+		  cursor = 0;
+		  for (i=0; i<INPUT_BUFF_LEN; i++)
+			input_buff[i] = ' ';
+		}
+	  if ((uint8_t) byte == 8) // backspace
+		{
+		  if (cursor != 0)
+			  cursor --;
+		  continue;
+		}
+
+	  input_buff[cursor] = byte;
+
+	  cursor++;
+	  if (cursor >= INPUT_BUFF_LEN)
+		cursor = INPUT_BUFF_LEN;
+	}
+
+
+
 }
 
 // workaround for sprintf TODO remove

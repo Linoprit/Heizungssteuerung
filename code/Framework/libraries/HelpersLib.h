@@ -9,6 +9,8 @@
 #define LIBRARIES_HELPERSLIB_H_
 
 #include <stdint.h>
+#include "libraries/Arduino/WString.h"
+
 
 // value2char: char* len, that holds long type result
 #define MAX_BUFFER_LEN 12
@@ -30,7 +32,7 @@ public:
   static void value2char(
       char* result_buff, uint8_t result_buff_len,
       uint8_t exp, long int value);
-
+  static void num2str(String *msg_str, uint32_t number);
 
 };
 

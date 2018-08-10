@@ -21,6 +21,9 @@ uart_socket*			Common::errorMsg_comm	= NULL;
 nextion*				Common::nex_disp		= NULL;
 Heiz_display*			Common::heiz_disp		= NULL;
 Error_messaging*		Common::error_msg		= NULL;
+Rtc_device*				Common::rtc				= NULL;
+State_Machine*			Common::machine			= NULL;
+
 
 
 // Workaround undefined reference error
@@ -40,9 +43,12 @@ void Common::init()
 #endif /* TRACE */
 
 
-  display_comm = new uart_socket(get_huart3(), get_displayTask() );
-  nex_disp     = new nextion(display_comm);
-  heiz_disp    = new Heiz_display();
+  display_comm 	= new uart_socket(get_huart3(), get_displayTask() );
+  nex_disp     	= new nextion(display_comm);
+  heiz_disp    	= new Heiz_display();
+  rtc			= new Rtc_device(get_rtc());
+  machine		= new State_Machine();
+
 
   // Workaround...
   //osSignalSet (*get_displayTask(), 0);
