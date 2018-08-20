@@ -94,15 +94,13 @@ uint32_t Rtc_device::get_time_minutes(void)
   HAL_RTC_GetTime(rtc_handle, &sTime, RTC_FORMAT_BIN);
   HAL_RTC_GetDate(rtc_handle, &sDate, RTC_FORMAT_BIN);
 
-  return (sDate.WeekDay * 24 * 60) + (sTime.Minutes * 60) + sTime.Minutes;
+  return (sDate.WeekDay * 24 * 60) + (sTime.Hours * 60) + sTime.Minutes;
 }
 
 
 void Rtc_device::save_backup_value(uint32_t Data, uint32_t BackupRegister)
 {
-  // TODO we need to enable BKP_CLK?
-  //__HAL_RCC_BKP_CLK_ENABLE(); //??
-
+  // BackupRegister must be in range of 1 to 10 !!!
   HAL_RTCEx_BKUPWrite(rtc_handle, BackupRegister, Data);
 }
 

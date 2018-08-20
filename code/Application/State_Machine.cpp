@@ -8,6 +8,7 @@
 #include "State_Machine.h"
 #include "stm32f1xx_hal.h"
 #include "Instances/Common.h"
+#include "libraries/HelpersLib.h"
 
 
 
@@ -18,7 +19,7 @@ State_Machine::State_Machine ()
   curr_state	= st_pmp1;
   old_state		= st_paus2;
   target_time   = 0;
-  curr_time 	= 0;
+  curr_time 	= &op_times[op_pmp1];
 
   for (uint8_t i = 0; i < OP_TIMES_LEN; i++)
 	 op_times[i] = 0;
@@ -72,14 +73,21 @@ void State_Machine::loop(void)
 		{
 		  old_modus = curr_modus;
 		  Common::heiz_disp->modus_winter_active();
+
+		  next_state();
+
+		  for (uint32_t i=0; i < op_paus2; i++)
+			op_times[i] = 0;
+
+
 		}
 
-	  if(Common::heiz_disp->get_bttn_states()[Heiz_display::st_pmp1] > 0)
+	  if( Common::heiz_disp->get_bttn_states()[Heiz_display::st_pmp1] > 0)
 		pump_1_on();
 	  else
 		pump_1_off();
 
-	  if(Common::heiz_disp->get_bttn_states()[Heiz_display::st_pmp2] > 0)
+	  if( Common::heiz_disp->get_bttn_states()[Heiz_display::st_pmp2] > 0)
 		pump_2_on();
 	  else
 		pump_2_off();
@@ -88,15 +96,19 @@ void State_Machine::loop(void)
 
 void State_Machine::next_state(void)
 {
+  *curr_time = 0;
+
   if(curr_state == st_pmp1)
 	{
 	  curr_state = st_paus1;
 	  if (curr_modus == mod_winter)
 		op_times[op_paus1] =
 			Common::heiz_disp->get_setup_vals()[Heiz_display::paus1_max];
-	  else
+	  else if (curr_modus == mod_sommer)
 		op_times[op_paus1] =
 			Common::heiz_disp->get_setup_vals()[Heiz_display::paus1_summer_max];
+	  else
+		op_times[op_paus1] = 0;
 
 	  curr_time  = &op_times[op_paus1];
 
@@ -109,9 +121,11 @@ void State_Machine::next_state(void)
 	  if (curr_modus == mod_winter)
 		op_times[op_pmp2] =
 			Common::heiz_disp->get_setup_vals()[Heiz_display::pmp2_max];
-	  else
+	  else if (curr_modus == mod_sommer)
 		op_times[op_pmp2] =
 			Common::heiz_disp->get_setup_vals()[Heiz_display::pmp2_summer_max];
+	  else
+		op_times[op_pmp2] = 0;
 
 	  curr_time  = &op_times[op_pmp2];
 
@@ -124,8 +138,10 @@ void State_Machine::next_state(void)
 	  if (curr_modus == mod_winter)
 		op_times[op_paus2] =
 			Common::heiz_disp->get_setup_vals()[Heiz_display::paus2_max];
-	  else
+	  else if (curr_modus == mod_sommer)
 		op_times[op_paus2] = Common::rtc->calc_next_pumpservice();
+	  else
+		op_times[op_paus2] = 0;
 
 	  curr_time  = &op_times[op_paus2];
 
@@ -149,7 +165,17 @@ void State_Machine::next_state(void)
 	}
 
 
+//TODO remove
+  String msg_str = "curr_state: ";
+  HelpersLib::num2str(&msg_str, curr_state);
+  msg_str += " curr_time: ";
+  HelpersLib::num2str(&msg_str, *curr_time);
+  msg_str += "\n";
+  Error_messaging::write(msg_str.c_str());
+
+
 }
+
 void State_Machine::state_loop(void)
 {
   if (old_state != curr_state) // init
@@ -158,11 +184,33 @@ void State_Machine::state_loop(void)
 	  inc_target_time();
 	}
 
+
+
+  // TODO remove
+  String msg_str = "get_time: ";
+  HelpersLib::num2str(&msg_str, Common::rtc->get_time_minutes());
+  msg_str += " ";
+  HelpersLib::num2str(&msg_str, target_time);
+  msg_str += " ";
+
+
+
   if (Common::rtc->get_time_minutes() != target_time)
 	return;
 
   // cycle
-  *curr_time --;
+  *curr_time -= 1;
+
+
+
+  // TODO remove
+  msg_str += " curr_time: ";
+  HelpersLib::num2str(&msg_str, *curr_time);
+  msg_str += "\n";
+  Error_messaging::write(msg_str.c_str());
+
+
+
 
   if (*curr_time == 0)
 	next_state();
@@ -226,7 +274,7 @@ void State_Machine::pump_2_off(void)
 
 State_Machine::betrieb_enum State_Machine::get_betrieb(void)
 {
-  if (HAL_GPIO_ReadPin(DayNight_GPIO_Port, DayNight_Pin) == GPIO_PIN_SET)
+  if (HAL_GPIO_ReadPin(DayNight_GPIO_Port, DayNight_Pin) == GPIO_PIN_RESET)
 	return bet_tag;
   else
 	return bet_nacht;
