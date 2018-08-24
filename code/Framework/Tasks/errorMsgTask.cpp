@@ -25,9 +25,9 @@ void StartErrorMsgTsk(void const * argument)
 	  osSignalWait (0, osWaitForever);
 	  //osDelay(200);
 
-	  HAL_GPIO_TogglePin(LED_04_GPIO_Port, LED_04_Pin);
+	  HAL_GPIO_TogglePin(LED_03_GPIO_Port, LED_03_Pin);
 
-	  Common::error_msg->input_loop();
+	  //Common::error_msg->input_loop();
 	  //Error_messaging::write("errorTask\n");
 	}
 

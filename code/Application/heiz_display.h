@@ -10,6 +10,7 @@
 
 #include "Devices/Nextion/ITEADLIB_Arduino_Nextion/Nextion.h"
 #include "libraries/Arduino/WString.h"
+#include <../Application/State_Machine.h>
 
 
 /**
@@ -72,7 +73,7 @@ public:
   static char tag_nacht[TAGT_NACHT_LEN];
 
   static uint8_t curr_page;
-
+  static State_Machine::betrieb_enum old_betrieb;
 
 
 private:

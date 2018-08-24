@@ -77,9 +77,6 @@ osStaticThreadDef_t displayTskControlBlock;
 osThreadId errorMsgTskHandle;
 uint32_t errorMsgTskBuffer[ 128 ];
 osStaticThreadDef_t errorMsgTskControlBlock;
-osThreadId aliveTskHandle;
-uint32_t aliveTskBuffer[ 128 ];
-osStaticThreadDef_t aliveTskControlBlock;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
@@ -96,7 +93,6 @@ static void MX_USART3_UART_Init(void);
 void StartControlTsk(void const * argument);
 extern void StartDisplayTsk(void const * argument);
 extern void StartErrorMsgTsk(void const * argument);
-extern void StartAliveTsk(void const * argument);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
@@ -113,7 +109,7 @@ RTC_HandleTypeDef*	get_rtc(void) 		{ return &hrtc;	  }
 osThreadId* 		get_controlTask(void)		{ return &controlTskHandle; }
 osThreadId* 		get_displayTask(void)		{ return &displayTskHandle;}
 osThreadId* 		get_errorMsgTask(void)		{ return &errorMsgTskHandle;}
-osThreadId* 		get_aliveTask(void)			{ return &aliveTskHandle; }
+//osThreadId* 		get_aliveTask(void)			{ return &aliveTskHandle; }
 
 /* USER CODE END 0 */
 
@@ -181,10 +177,6 @@ int main(void)
   osThreadStaticDef(errorMsgTsk, StartErrorMsgTsk, osPriorityIdle, 0, 128, errorMsgTskBuffer, &errorMsgTskControlBlock);
   errorMsgTskHandle = osThreadCreate(osThread(errorMsgTsk), NULL);
 
-  /* definition and creation of aliveTsk */
-  osThreadStaticDef(aliveTsk, StartAliveTsk, osPriorityNormal, 0, 128, aliveTskBuffer, &aliveTskControlBlock);
-  aliveTskHandle = osThreadCreate(osThread(aliveTsk), NULL);
-
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   /* USER CODE END RTOS_THREADS */
@@ -238,7 +230,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL9;
+  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL2;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
@@ -253,7 +245,7 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
@@ -282,7 +274,6 @@ static void MX_RTC_Init(void)
 {
 
   /* USER CODE BEGIN RTC_Init 0 */
-
   /* USER CODE END RTC_Init 0 */
 
   RTC_TimeTypeDef sTime;
@@ -302,6 +293,8 @@ static void MX_RTC_Init(void)
     _Error_Handler(__FILE__, __LINE__);
   }
   /* USER CODE BEGIN RTC_Init 2 */
+  return;
+
 
   /* USER CODE END RTC_Init 2 */
 
@@ -320,9 +313,9 @@ static void MX_RTC_Init(void)
   /* USER CODE END RTC_Init 3 */
 
   DateToUpdate.WeekDay = RTC_WEEKDAY_MONDAY;
-  DateToUpdate.Month = RTC_MONTH_JANUARY;
-  DateToUpdate.Date = 0x1;
-  DateToUpdate.Year = 0x0;
+  DateToUpdate.Month = RTC_MONTH_AUGUST;
+  DateToUpdate.Date = 0x7;
+  DateToUpdate.Year = 0x18;
 
   if (HAL_RTC_SetDate(&hrtc, &DateToUpdate, RTC_FORMAT_BCD) != HAL_OK)
   {
@@ -358,7 +351,7 @@ static void MX_USART3_UART_Init(void)
 {
 
   huart3.Instance = USART3;
-  huart3.Init.BaudRate = 9600;
+  huart3.Init.BaudRate = 115200;
   huart3.Init.WordLength = UART_WORDLENGTH_8B;
   huart3.Init.StopBits = UART_STOPBITS_1;
   huart3.Init.Parity = UART_PARITY_NONE;

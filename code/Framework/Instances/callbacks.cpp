@@ -5,7 +5,7 @@
  *      Author: harald
  */
 
-#include <System/SoftwareEvents.h>
+
 #include "callbacks.h"
 #include "stm32f1xx_hal.h"
 #include "Common.h"
@@ -16,11 +16,11 @@ ISR_callback *uart2_RxCplt_callback   = NULL;
 ISR_callback *uart3_RxCplt_callback   = NULL;
 
 
-void HAL_SYSTICK_Callback(void)
+/*void HAL_SYSTICK_Callback(void)
 {
-  uint32_t tick = HAL_GetTick();
-  SoftwareEvents_checkTicks(tick);
-}
+
+
+}*/
 
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
@@ -78,11 +78,8 @@ void call_uart_callbacks(UART_HandleTypeDef *huart)
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-
-  // TODO remove
-  HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
-
-  // TODO some overflow handler?
+  // TODO do we need some overflow handler?
+  HAL_GPIO_WritePin(LED_05_GPIO_Port, LED_05_Pin, GPIO_PIN_SET);
   call_uart_callbacks(huart);
 }
 

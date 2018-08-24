@@ -33,7 +33,6 @@ EXTERNC osThreadId* 		get_errorMsgTask(void);
 #ifdef __cplusplus
 
 // put cpp includes here!!
-#include <System/SoftwareEvents.h>
 #include <Devices/Nextion/Nextion_device.h>
 #include "../Application/heiz_display.h"
 #include <Devices/Realtime_clock/rtc_device.h>
@@ -50,8 +49,6 @@ public:
   virtual ~Common() {};
 
   static void init(void);
-  static SoftwareEvents*    get_sw_events(void);
-
   static uint32_t get_tick(void);
 
   static inline void delay(uint32_t delay)
@@ -69,18 +66,11 @@ public:
   static Heiz_display 	*heiz_disp;
   static State_Machine	*machine;
 
-  // Task Classes
-  //static errorMsgTask 	*errorMsg_tsk;
-
   // system Class
   static Error_messaging *error_msg;
 
 private:
- /* static void init_comm_layer(void);
-  static Comm_Layer *comm_layer;*/
 
-
-  static SoftwareEvents    *sw_events;
 };
 
 #endif // C interface

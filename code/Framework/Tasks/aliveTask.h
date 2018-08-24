@@ -8,7 +8,7 @@
 #ifndef TASKS_ALIVETASK_H_
 #define TASKS_ALIVETASK_H_
 
-
+/*
 // C interface
 #ifdef __cplusplus
 #define EXTERNC extern "C"
@@ -29,11 +29,11 @@ class alive_Task
 {
 public:
   alive_Task ();
-  virtual
-  ~alive_Task ();
+  virtual ~alive_Task () { };
 
   static void StartAliveTsk(void const * argument);
 };
 
 #endif // C interface
+*/
 #endif /* TASKS_ALIVETASK_H_ */

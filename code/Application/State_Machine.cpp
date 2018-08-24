@@ -20,9 +20,12 @@ State_Machine::State_Machine ()
   old_state		= st_paus2;
   target_time   = 0;
   curr_time 	= &op_times[op_pmp1];
+  *curr_time		= 1;
 
   for (uint8_t i = 0; i < OP_TIMES_LEN; i++)
 	 op_times[i] = 0;
+
+  next_state();
 }
 
 
@@ -78,8 +81,6 @@ void State_Machine::loop(void)
 
 		  for (uint32_t i=0; i < op_paus2; i++)
 			op_times[i] = 0;
-
-
 		}
 
 	  if( Common::heiz_disp->get_bttn_states()[Heiz_display::st_pmp1] > 0)
@@ -163,17 +164,6 @@ void State_Machine::next_state(void)
 	  pump_1_on();
 	  pump_2_off();
 	}
-
-
-//TODO remove
-  String msg_str = "curr_state: ";
-  HelpersLib::num2str(&msg_str, curr_state);
-  msg_str += " curr_time: ";
-  HelpersLib::num2str(&msg_str, *curr_time);
-  msg_str += "\n";
-  Error_messaging::write(msg_str.c_str());
-
-
 }
 
 void State_Machine::state_loop(void)
@@ -184,33 +174,12 @@ void State_Machine::state_loop(void)
 	  inc_target_time();
 	}
 
-
-
-  // TODO remove
-  String msg_str = "get_time: ";
-  HelpersLib::num2str(&msg_str, Common::rtc->get_time_minutes());
-  msg_str += " ";
-  HelpersLib::num2str(&msg_str, target_time);
-  msg_str += " ";
-
-
-
   if (Common::rtc->get_time_minutes() != target_time)
 	return;
 
   // cycle
-  *curr_time -= 1;
-
-
-
-  // TODO remove
-  msg_str += " curr_time: ";
-  HelpersLib::num2str(&msg_str, *curr_time);
-  msg_str += "\n";
-  Error_messaging::write(msg_str.c_str());
-
-
-
+  if (*curr_time > 0)
+	*curr_time -= 1;
 
   if (*curr_time == 0)
 	next_state();

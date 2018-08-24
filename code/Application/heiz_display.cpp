@@ -9,8 +9,8 @@
 #include "heiz_display.h"
 #include "libraries/Arduino/itoa.h"
 #include "Instances/Common.h"
-#include <../Application/State_Machine.h>
 #include <libraries/HelpersLib.h>
+#include <stm32f1xx_hal_uart.h>
 
 
 
@@ -19,6 +19,7 @@ uint32_t Heiz_display::bttn_states[BTTN_STATES_LEN];
 char     Heiz_display::date_time_str[DATE_TIME_LEN];
 char     Heiz_display::tag_nacht[TAGT_NACHT_LEN];
 uint8_t  Heiz_display::curr_page = 0xFF; // 0xFF = init
+State_Machine::betrieb_enum Heiz_display::old_betrieb;
 
 
 
@@ -115,6 +116,12 @@ void b1_Exit_PopCallback(void *ptr)
   if (Common::machine->get_modus() == State_Machine::mod_sommer)
 	Common::heiz_disp->modus_sommer_active();
 
+  if ( (Common::machine->get_betrieb() == State_Machine::bet_nacht)
+	  && (Common::machine->get_modus() == State_Machine::mod_winter) )
+	{
+	  return;
+	}
+
   Common::machine->next_state();
 
 }
@@ -165,29 +172,41 @@ Heiz_display::Heiz_display ()
   b0_modus.attachPop(b0_modus_PopCallback, 	&b0_modus);
 
   // RTC-Backup holen
-  for (uint32_t i=0; i < paus2_max+1; i++)
-	setup_vals[i] = Common::rtc->read_backup_value(i+1);
+  for (uint32_t i=0; i < (paus2_max+1); i++)
+	{
+	  uint32_t value = Common::rtc->read_backup_value(i+1);
+	  if (value < 1)
+		setup_vals[i] = 1;
+	  else if (value > 60)
+		setup_vals[i] = 60;
+	  else
+		setup_vals[i] = value;
+	}
 
   setup_vals[pmp1_summer_max]  = PMP1_SOMMER_MAX	;
   setup_vals[paus1_summer_max] = PAUS1_SOMMER_MAX	;
   setup_vals[pmp2_summer_max]  = PMP2_SOMMER_MAX	;
   setup_vals[paus2_summer_max] = WHOLE_WEEK_MINUTES ;
+
+  if (Common::machine->get_betrieb() == State_Machine::bet_nacht)
+	old_betrieb = State_Machine::bet_tag;
+  else
+	old_betrieb = State_Machine::bet_nacht;
 }
 
 
 void Heiz_display::loop(void)
 {
   static bool 		init_setup_vals = false;
-  static uint32_t	old_second	= 0;
+  static uint32_t	next_update	= 0;
 
   nexLoop(nex_listen_list);
-
-  uint32_t time_date[SETUP_VALS_LEN];
-  Common::rtc->get_time_date(time_date);
+  Common::rtc->get_time_date(setup_vals);
 
   // initialize
   if (Heiz_display::curr_page == 0xFF)
 	{
+	  Common::rtc->restore_date(setup_vals);
 	  nexInit();
 	  sendCommand("page 0");
 	  Heiz_display::curr_page = 0;
@@ -199,16 +218,37 @@ void Heiz_display::loop(void)
 	{
 	  init_setup_vals = false;
 
-	  if (old_second != time_date[Heiz_display::second])
+	  if (next_update == 0)
 		{
-		  old_second = time_date[Heiz_display::second];
-		  n0_second.setValue(time_date[Heiz_display::second]);
+		  next_update = 1;
+		  upd_mode_bttn_text();
+		}
+	  else if (next_update == 1)
+		{
+		  next_update = 2;
+		  upd_betrieb_text();
+		}
+	  else if (next_update == 2)
+		{
+		  next_update = 3;
+		  upd_time_date_str();
+		}
+	  else if (next_update == 3)
+		{
+		  next_update = 4;
+		  upd_op_times();
+		}
+	  else if (next_update == 4)
+		{
+		  next_update = 0;
+		  bt0_pmp1_PopCallback(NULL);
+		  bt0_pmp2_PopCallback(NULL);
 		}
 
-	  if (time_date[Heiz_display::second] == 0 )
-		{
-		  upd_page_0();
-		}
+	  n0_second.setValue(setup_vals[second]);
+
+	  if ( (setup_vals[minute] == 0) && (setup_vals[hour] == 0) && (setup_vals[second] == 0) )
+		Common::rtc->set_date(setup_vals);  // store changed date
 	}
 
   if ( (Heiz_display::curr_page == 1) && (init_setup_vals == false) )
@@ -291,7 +331,7 @@ void  Heiz_display::upd_time_date_str(void)
   String time_str = time_date_to_str(sTime, sDate);
   t0_date_time.setText(time_str.c_str());
 
-  n0_second.setValue(sTime.Seconds);
+  //n0_second.setValue(sTime.Seconds);
 }
 
 void Heiz_display::modus_sommer_active(void)
@@ -363,6 +403,25 @@ String	Heiz_display::time_date_to_str(
 /*
 
 
+  String msg_str = "curr_state: ";
+  HelpersLib::num2str(&msg_str, curr_state);
+  msg_str += " curr_time: ";
+  HelpersLib::num2str(&msg_str, *curr_time);
+  msg_str += "\n";
+  Error_messaging::write(msg_str.c_str());
+
+
+  String msg_str = "get_time: ";
+  HelpersLib::num2str(&msg_str, Common::rtc->get_time_minutes());
+  msg_str += " ";
+  HelpersLib::num2str(&msg_str, target_time);
+  msg_str += " ";
+
+
+  msg_str += " curr_time: ";
+  HelpersLib::num2str(&msg_str, *curr_time);
+  msg_str += "\n";
+  Error_messaging::write(msg_str.c_str());
 
 	  op_times[op_pmp1] = 12;
 	  String msg_str = "optimes: ";
@@ -374,17 +433,11 @@ String	Heiz_display::time_date_to_str(
 
 
 
-
-  // TODO remove
   String msg_str = "bt0_pmp2_state: ";
   HelpersLib::num2str(&msg_str, *state );
   msg_str += "\n";
   Error_messaging::write(msg_str.c_str());
 
-
-
-
-  // TODO remove
   String msg_str = "bt0_pmp1_state: ";
   HelpersLib::num2str(&msg_str, *state );
   msg_str += "\n";

@@ -12,6 +12,9 @@
 #include "libraries/Arduino/WString.h"
 
 #define WHOLE_WEEK_MINUTES 10080
+#define BACKUP_REG_YEAR       10
+#define BACKUP_REG_MONTH       9
+#define BACKUP_REG_DAY         8
 
 class Rtc_device
 {
@@ -21,6 +24,10 @@ public:
   virtual ~Rtc_device () { };
 
   void	 set_time_date(uint32_t* setup_vals);
+  void	 set_date(uint32_t* setup_vals);
+  void	 set_time(uint32_t* setup_vals);
+  void	 restore_date(uint32_t* setup_vals);
+
   void   get_time_date(uint32_t* setup_vals);
   void   get_time_date(RTC_TimeTypeDef *sTime, RTC_DateTypeDef *sDate);
   uint32_t get_time_minutes(void);

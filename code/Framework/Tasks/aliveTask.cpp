@@ -12,25 +12,21 @@
 #include <Tasks/controlTask.h>
 
 
+// this task is currently not used
+
 // C interface
-void StartAliveTsk(void const * argument)
+/*void StartAliveTsk(void const * argument)
 {
   alive_Task::StartAliveTsk(argument);
 }
 
 
 
-
 alive_Task::alive_Task ()
 {
-  // TODO Auto-generated constructor stub
 
 }
 
-alive_Task::~alive_Task ()
-{
-  // TODO Auto-generated destructor stub
-}
 
 void alive_Task::StartAliveTsk(void const * argument)
 {
@@ -40,8 +36,8 @@ void alive_Task::StartAliveTsk(void const * argument)
 	{
 
 	  HAL_GPIO_TogglePin(LED_03_GPIO_Port, LED_03_Pin);
-	  osDelay(200);
+	  osDelay(1000);
 
 
 	}
-}
+}*/

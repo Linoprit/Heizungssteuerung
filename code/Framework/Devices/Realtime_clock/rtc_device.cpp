@@ -19,14 +19,14 @@ Rtc_device::Rtc_device (RTC_HandleTypeDef*  rtc_handle)
 {
   this->rtc_handle = rtc_handle;
 
-  RTC_TimeTypeDef sTime;
+ /* RTC_TimeTypeDef sTime;
   sTime.Hours = 4;
   sTime.Minutes = 5;
   sTime.Seconds = 30;
-  HAL_RTC_SetTime(rtc_handle,&sTime, RTC_FORMAT_BIN);
+  HAL_RTC_SetTime(rtc_handle,&sTime, RTC_FORMAT_BIN);*/
 
   RTC_DateTypeDef sDate;
-  sDate.Date = 2;
+  sDate.Date = 20;
   sDate.Month = 8;
   sDate.Year = 18;
   HAL_RTC_SetDate(rtc_handle, &sDate, RTC_FORMAT_BIN);
@@ -35,15 +35,41 @@ Rtc_device::Rtc_device (RTC_HandleTypeDef*  rtc_handle)
 
 void	Rtc_device::set_time_date(uint32_t* setup_vals)
 {
+  set_time(setup_vals);
+  set_date(setup_vals);
+}
+
+void	Rtc_device::set_time(uint32_t* setup_vals)
+{
   RTC_TimeTypeDef sTime;
   sTime.Hours   = setup_vals[Heiz_display::hour];
   sTime.Minutes = setup_vals[Heiz_display::minute];
   HAL_RTC_SetTime(rtc_handle, &sTime, RTC_FORMAT_BIN);
+}
 
+void	Rtc_device::set_date(uint32_t* setup_vals)
+{
   RTC_DateTypeDef sDate;
   sDate.Date  = setup_vals[Heiz_display::day];
   sDate.Month = setup_vals[Heiz_display::month];
   sDate.Year  = setup_vals[Heiz_display::year];
+  HAL_RTC_SetDate(rtc_handle, &sDate, RTC_FORMAT_BIN);
+
+  save_backup_value( sDate.Year,  BACKUP_REG_YEAR);
+  save_backup_value( sDate.Month, BACKUP_REG_MONTH);
+  save_backup_value( sDate.Date,  BACKUP_REG_DAY);
+}
+
+void	Rtc_device::restore_date(uint32_t* setup_vals)
+{
+  setup_vals[Heiz_display::day]   = read_backup_value(BACKUP_REG_DAY );
+  setup_vals[Heiz_display::month] = read_backup_value(BACKUP_REG_MONTH);
+  setup_vals[Heiz_display::year]  = read_backup_value(BACKUP_REG_YEAR);
+
+  RTC_DateTypeDef sDate;
+  sDate.Date =  read_backup_value(BACKUP_REG_DAY );
+  sDate.Month = read_backup_value(BACKUP_REG_MONTH);
+  sDate.Year  = read_backup_value(BACKUP_REG_YEAR);
   HAL_RTC_SetDate(rtc_handle, &sDate, RTC_FORMAT_BIN);
 }
 

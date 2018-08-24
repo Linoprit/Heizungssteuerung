@@ -14,7 +14,6 @@
 
 
 
-SoftwareEvents*			Common::sw_events 		= new SoftwareEvents();
 uart_socket*			Common::display_comm	= NULL;
 uart_socket*			Common::errorMsg_comm	= NULL;
 //errorMsgTask*	  		Common::errorMsg_tsk	= NULL;
@@ -36,6 +35,8 @@ void common_init(void)	{ Common::init(); }
 
 void Common::init()
 {
+  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
+
 #ifdef TRACE
   errorMsg_comm = new uart_socket(get_huart1(), get_errorMsgTask());
   error_msg		= new Error_messaging(errorMsg_comm);
@@ -49,18 +50,11 @@ void Common::init()
   rtc			= new Rtc_device(get_rtc());
   machine		= new State_Machine();
 
-
   // Workaround...
   //osSignalSet (*get_displayTask(), 0);
 
-
 }
 
-
-SoftwareEvents* Common::get_sw_events(void)
-{
-  return sw_events;
-}
 
 uint32_t Common::get_tick(void)
 {
