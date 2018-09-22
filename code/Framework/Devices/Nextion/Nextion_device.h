@@ -10,7 +10,7 @@
 
 #include "stm32f1xx_hal.h"
 #include <Sockets/uart_socket.h>
-#include "Devices/Nextion/ITEADLIB_Arduino_Nextion/Nextion.h"
+#include "Devices/Nextion/ITEADLIB_Nextion/Nextion.h"
 
 /**
  * Stellt die Verbindung zum UART-Socket her und stellt

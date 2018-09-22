@@ -79,7 +79,7 @@ void call_uart_callbacks(UART_HandleTypeDef *huart)
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
   // TODO do we need some overflow handler?
-  HAL_GPIO_WritePin(LED_05_GPIO_Port, LED_05_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(LED_04_GPIO_Port, LED_04_Pin, GPIO_PIN_SET);
   call_uart_callbacks(huart);
 }
 

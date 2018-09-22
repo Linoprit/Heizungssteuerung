@@ -93,10 +93,12 @@ void b1_Exit_PopCallback(void *ptr)
   NexNumber *e = NULL;
   uint8_t i;
 
+  uint32_t tmp_setup_vals[SETUP_VALS_LEN];
+
   for(i = 0; (e = page1_setup_list[i]) != NULL; i++)
 	{
-	  e->getValue(&Heiz_display::setup_vals[i]);
-	  chksum_soll += Heiz_display::setup_vals[i];
+	  e->getValue(&tmp_setup_vals[i]);
+	  chksum_soll += tmp_setup_vals[i];
 	}
 
   va1_checksum.getValue(&chksum_ist);
@@ -105,9 +107,15 @@ void b1_Exit_PopCallback(void *ptr)
 	{
 	  Common::rtc->set_time_date(&Heiz_display::setup_vals[0]);
 
-	  // save to backup
-	  for (uint32_t i=0; i < Heiz_display::paus2_max+1; i++)
-		Common::rtc->save_backup_value(Common::heiz_disp->setup_vals[i], i+1);
+	  if (Common::machine->get_modus() != State_Machine::mod_sommer)
+		{
+		  // save to backup
+		  for (uint32_t i=0; i < Heiz_display::paus2_max+1; i++)
+			{
+			  Common::rtc->save_backup_value(tmp_setup_vals[i], i+1);
+			  Common::heiz_disp->setup_vals[i] = tmp_setup_vals[i];
+			}
+		}
 	}
 
   sendCommand("page 0");
@@ -123,7 +131,6 @@ void b1_Exit_PopCallback(void *ptr)
 	}
 
   Common::machine->next_state();
-
 }
 
 void bt0_setup_PopCallback(void *ptr)
@@ -182,6 +189,8 @@ Heiz_display::Heiz_display ()
 	  else
 		setup_vals[i] = value;
 	}
+
+  modus_winter_active();
 
   setup_vals[pmp1_summer_max]  = PMP1_SOMMER_MAX	;
   setup_vals[paus1_summer_max] = PAUS1_SOMMER_MAX	;
@@ -399,9 +408,24 @@ String	Heiz_display::time_date_to_str(
   return time_str;
 }
 
+bool Heiz_display::get_bttn_pmp1(void)
+{
+  if( Common::heiz_disp->get_bttn_states()[Heiz_display::st_pmp1] > 0)
+	return true;
+
+ return false;
+}
+
+bool Heiz_display::get_bttn_pmp2(void)
+{
+  if( Common::heiz_disp->get_bttn_states()[Heiz_display::st_pmp2] > 0)
+  	return true;
+
+  return false;
+}
 
 /*
-
+  HAL_GPIO_TogglePin(LED_02_GPIO_Port, LED_02_Pin);
 
   String msg_str = "curr_state: ";
   HelpersLib::num2str(&msg_str, curr_state);

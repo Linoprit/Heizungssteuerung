@@ -61,22 +61,20 @@
 
 #define LED_Pin GPIO_PIN_13
 #define LED_GPIO_Port GPIOC
-#define Pump_2_Pin GPIO_PIN_15
-#define Pump_2_GPIO_Port GPIOA
-#define Pump_1_Pin GPIO_PIN_3
-#define Pump_1_GPIO_Port GPIOB
+#define LED_01_Pin GPIO_PIN_0
+#define LED_01_GPIO_Port GPIOA
+#define LED_02_Pin GPIO_PIN_1
+#define LED_02_GPIO_Port GPIOA
+#define LED_03_Pin GPIO_PIN_2
+#define LED_03_GPIO_Port GPIOA
+#define LED_04_Pin GPIO_PIN_3
+#define LED_04_GPIO_Port GPIOA
 #define DayNight_Pin GPIO_PIN_4
-#define DayNight_GPIO_Port GPIOB
-#define LED_05_Pin GPIO_PIN_5
-#define LED_05_GPIO_Port GPIOB
-#define LED_04_Pin GPIO_PIN_6
-#define LED_04_GPIO_Port GPIOB
-#define LED_03_Pin GPIO_PIN_7
-#define LED_03_GPIO_Port GPIOB
-#define LED_02_Pin GPIO_PIN_8
-#define LED_02_GPIO_Port GPIOB
-#define LED_01_Pin GPIO_PIN_9
-#define LED_01_GPIO_Port GPIOB
+#define DayNight_GPIO_Port GPIOA
+#define Pump_1_Pin GPIO_PIN_5
+#define Pump_1_GPIO_Port GPIOA
+#define Pump_2_Pin GPIO_PIN_6
+#define Pump_2_GPIO_Port GPIOA
 
 /* ########################## Assert Selection ############################## */
 /**

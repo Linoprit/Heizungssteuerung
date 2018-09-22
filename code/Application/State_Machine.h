@@ -31,22 +31,29 @@ public:
   };
 
   enum op_times_enum {
-	op_pmp1, op_pmp2, op_paus1, op_paus2
+	op_pmp1, op_paus1, op_pmp2, op_paus2
   };
 
   State_Machine ();
   virtual ~State_Machine () {};
 
+  void check_pumps(void);
+  void check_tables(void);
+  void check_act_time(void);
+
   void loop(void);
+  void state_pmp1(void);
+  void state_paus1(void);
+  void state_pmp2(void);
+  void state_paus2(void);
+
   modus_enum   get_modus(void);
   void		   inc_modus(void);
   betrieb_enum get_betrieb(void);
+  state_enum   get_state(void);
   void 		   inc_target_time(void);
   void         get_op_times(uint32_t* values)	;
-
-  void next_state(void);
-  void state_loop(void);
-  void state_stop(void);
+  void		   next_state(void);
 
   void pump_1_on(void);
   void pump_1_off(void);
@@ -55,14 +62,15 @@ public:
 
 
 private:
-  modus_enum   	curr_modus;
+  modus_enum   	act_modus;
   modus_enum 	old_modus;
-  state_enum 	curr_state;
-  state_enum	old_state;
+  state_enum 	act_state;
 
-  uint32_t		*curr_time;
-  uint32_t 		op_times[OP_TIMES_LEN];
+  uint32_t		*act_time;
+  uint32_t 		remaining_times[OP_TIMES_LEN];
+  uint32_t		*time_set; // point to setup_vals, summer or winter
   uint32_t		target_time;
+  bool			is_entry;
 
 
 };

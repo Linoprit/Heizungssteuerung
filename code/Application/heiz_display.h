@@ -8,7 +8,7 @@
 #ifndef DEVICES_NEXTION_HEIZ_DISPLAY_H_
 #define DEVICES_NEXTION_HEIZ_DISPLAY_H_
 
-#include "Devices/Nextion/ITEADLIB_Arduino_Nextion/Nextion.h"
+#include "Devices/Nextion/ITEADLIB_Nextion/Nextion.h"
 #include "libraries/Arduino/WString.h"
 #include <../Application/State_Machine.h>
 
@@ -52,6 +52,11 @@ public:
 
   inline uint32_t*  get_setup_vals(void) 	{ return &setup_vals[0]; 	}
   inline uint32_t*  get_bttn_states(void)	{ return &bttn_states[0];	}
+  inline uint32_t*  get_winter_times(void) 	{ return &setup_vals[0]; 	}
+  inline uint32_t*  get_summer_times(void) 	{ return &setup_vals[pmp1_summer_max]; 	}
+  bool get_bttn_pmp1(void);
+  bool get_bttn_pmp2(void);
+
   void inactivate_pump_bttns(void);
 
   void 	upd_mode_bttn_text(void);
