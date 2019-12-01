@@ -36,7 +36,6 @@ NexNumber n0_pmp1_max	= NexNumber(0,  3, "n0_pmp1_max");
 NexNumber n0_paus1_max	= NexNumber(0,  7, "n0_paus1_max");
 NexNumber n0_pmp2_max	= NexNumber(0,  8, "n0_pmp2_max");
 NexNumber n0_paus2_max  = NexNumber(0,  9, "n0_paus2_max");
-//NexNumber n0_paus2_sm   = NexNumber(0, 24, "n0_paus2_sm");
 NexNumber n0_second     = NexNumber(0, 23, "n0_second");
 NexText   t0_date_time  = NexText  (0, 33, "t0_date_time");
 
@@ -266,15 +265,13 @@ void Heiz_display::loop(void)
 		// store changed date at 0:00h
 		if ( (sTime.Minutes == 0) && (sTime.Hours == 0) && (sTime.Seconds == 0) ) {
 			Common::get_valueStorage()->storeDate(
-					sDate.WeekDay, sDate.Month, sDate.Year);
+					sDate.Date, sDate.Month, sDate.Year);
 		}
 	}
 
 	if ( (Heiz_display::curr_page == 2) && (init_disp_vals == false) ) {
 		init_disp_vals = true;
-
-
-		n2_day.setValue(sDate.WeekDay);
+		n2_day.setValue(sDate.Date);
 		n2_month.setValue(sDate.Month);
 		n2_year.setValue(sDate.Year);
 		n2_hour.setValue(sTime.Hours);
