@@ -42,19 +42,15 @@ public:
 	pmp2_summer_max  ,	paus2_summer_max
   };
 
-  enum bttn_state_vals_enum {
-	st_pmp1, st_pmp2
-  };
+  enum bttn_state_vals_enum { st_pmp1, st_pmp2  };
 
   Heiz_display ();
   virtual ~Heiz_display () { };
 
   void loop(void);
 
-  inline uint32_t*  get_setup_vals(void) 	{ return &setup_vals[0]; 	}
+ // inline uint32_t*  get_setup_vals(void) 	{ return &setup_vals[0]; 	}
   inline uint32_t*  get_bttn_states(void)	{ return &bttn_states[0];	}
-  inline uint32_t*  get_winter_times(void) 	{ return &setup_vals[0]; 	}
-  inline uint32_t*  get_summer_times(void) 	{ return &setup_vals[pmp1_summer_max]; 	}
   bool get_bttn_pmp1(void);
   bool get_bttn_pmp2(void);
 
@@ -66,21 +62,21 @@ public:
   void  upd_op_times(void);
   void 	upd_page_0(void);
 
-  void modus_sommer_active(void);
-  void modus_winter_active(void);
+  //void modus_sommer_active(void);
+  //void modus_winter_active(void);
 
   String time_date_to_str(RTC_TimeTypeDef sTime, RTC_DateTypeDef sDate);
 
+  // TODO remove setup_vals datatype
+ // static uint32_t setup_vals[SETUP_VALS_LEN]; // corresponding to page1_setup_list
+
   // display interface. must be public
-  static uint32_t setup_vals[SETUP_VALS_LEN]; // corresponding to page1_setup_list
   static uint32_t bttn_states[BTTN_STATES_LEN];
 
   static char date_time_str[DATE_TIME_LEN];
   static char tag_nacht[TAGT_NACHT_LEN];
 
   static uint8_t curr_page;
-  //static State_Machine::betrieb_enum old_betrieb;
-  //static  MainMachine::enm_states old_betrieb;
 
 private:
 

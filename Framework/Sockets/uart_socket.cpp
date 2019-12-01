@@ -52,18 +52,19 @@ bool uart_socket::send_many_bytes(
 	if (len > UART_TX_BUFF_LEN)
 		return ERROR;
 
-	while ( ( (uart_status != HAL_UART_STATE_READY) &&
-			(uart_status != HAL_UART_STATE_BUSY_RX) )  )
+	while ( (uart_status != HAL_UART_STATE_READY) &&
+			(uart_status != HAL_UART_STATE_BUSY_RX) )
 	{
-		if(count >= timeout)
-		{
+		if(count >= timeout) {
 			return ERROR;
 		}
 
 		osDelay(1);
+
 		count++;
 		uart_status = HAL_UART_GetState(huart);
 	}
+
 
 	// copy dynamic content to static buffer
 	for (uint8_t i=0; i < len; i++)

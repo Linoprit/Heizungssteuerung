@@ -21,7 +21,16 @@ void StartControlTsk(void const * argument)
 {
 	UNUSED(argument);
 
-	Common::init();
+	// Restore backed up values
+	ValueStorage* vs = Common::get_valueStorage();
+	ValueStorage::RtcBackupType rtcStorage = vs->getBlock();
+
+	MainMachine* mMach = Common::get_mainMachine();
+	mMach->set_tactiveMax_winter(0, rtcStorage.tactiveMax_winter_1 * 60000);
+	mMach->set_tpauseMax_winter(0,  rtcStorage.tpauseMax_winter_1  * 60000);
+	mMach->set_tactiveMax_winter(1, rtcStorage.tactiveMax_winter_2 * 60000);
+	mMach->set_tpauseMax_winter(1,  rtcStorage.tpauseMax_winter_2  * 60000);
+	mMach->set_state(static_cast<MainMachine::enm_states>(rtcStorage.MainMachineState));
 
 	for(;;)
 	{
@@ -44,11 +53,8 @@ void StartControlTsk(void const * argument)
 				HAL_GPIO_WritePin(Pump_2_GPIO_Port, Pump_2_Pin, GPIO_PIN_SET);
 			else
 				HAL_GPIO_WritePin(Pump_2_GPIO_Port, Pump_2_Pin, GPIO_PIN_RESET);
-
-
-
-
 		}
+
 
 #ifdef DO_PRINT_CTRLTSK
 		if (mMach != NULL)

@@ -80,7 +80,16 @@ MainMachine::OpTimesType MainMachine::get_opTimes(int8_t id) {
 	opTimes.tpause_winter     = get_tpause_winter(id);
 	opTimes.tactive_summer    = get_tactive_summer(id);
 	opTimes.tpause_summer     = get_tpause_summer(id);
-	opTimes.pumpActive        = isPumpActive(id);
+	opTimes.isPumpActive      = isPumpActive(id);
+
+	if(get_state() == winter) {
+		opTimes.state	  = get_state_winter(id);
+	} else if (get_state() == summer) {
+		opTimes.state	  = get_state_summer(id);
+	}
+	else if (get_state() == manual) {
+		opTimes.state	  = StateMachineInterface::init;
+	}
 
 	return opTimes;
 }

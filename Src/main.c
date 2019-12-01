@@ -28,7 +28,6 @@
 #include "../Framework/Instances/Common.h"
 #include "../Framework/System/uart_printf.h"
 
-#include "TestWString.h"
 
 /* USER CODE END Includes */
 
@@ -48,6 +47,8 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+CRC_HandleTypeDef hcrc;
+
 RTC_HandleTypeDef hrtc;
 
 UART_HandleTypeDef huart1;
@@ -75,6 +76,7 @@ static void MX_DMA_Init(void);
 static void MX_RTC_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_USART3_UART_Init(void);
+static void MX_CRC_Init(void);
 void StartControlTsk(void const * argument);
 extern void StartDisplayTsk(void const * argument);
 
@@ -95,11 +97,11 @@ extern void StartDisplayTsk(void const * argument);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-UART_HandleTypeDef* get_huart1(void) 		{ return &huart1; }
-UART_HandleTypeDef* get_huart3(void) 		{ return &huart3; }
+UART_HandleTypeDef* get_huart1(void) 		{ return &huart1; 	}
+UART_HandleTypeDef* get_huart3(void) 		{ return &huart3; 	}
 
-RTC_HandleTypeDef*	get_rtc(void) 			{ return &hrtc;	  }
-
+RTC_HandleTypeDef*	get_rtc(void) 			{ return &hrtc;	  	}
+CRC_HandleTypeDef*  get_crc(void)			{ return &hcrc;		}
 osThreadId* 		get_controlTask(void)	{ return &controlTskHandle; }
 osThreadId* 		get_displayTask(void)	{ return &displayTskHandle;}
 
@@ -135,9 +137,12 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_DMA_Init();
-  MX_RTC_Init();
   MX_USART1_UART_Init();
   MX_USART3_UART_Init();
+
+  MX_RTC_Init();
+
+  MX_CRC_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -160,18 +165,13 @@ int main(void)
   // Workaround hanging usart-dma
   // We must set priority to some level, other than 0, to avoid assertion fails with
   // cmsis core.
-  HAL_NVIC_SetPriority(USART1_IRQn, 255, 0);
+  HAL_NVIC_SetPriority(USART1_IRQn, 15, 0);
   HAL_NVIC_EnableIRQ(USART1_IRQn);
-  //HAL_NVIC_SetPriority(USART2_IRQn, 0, 0);
+  //HAL_NVIC_SetPriority(USART2_IRQn, 15, 0);
   //HAL_NVIC_EnableIRQ(USART2_IRQn);
-  HAL_NVIC_SetPriority(USART3_IRQn, 255, 0);
+  HAL_NVIC_SetPriority(USART3_IRQn, 15, 0);
   HAL_NVIC_EnableIRQ(USART3_IRQn);
   common_init();
-  
-  // TODO remove
-  //doStringTests();
-
-
 
   /* USER CODE END RTOS_QUEUES */
 
@@ -256,6 +256,32 @@ void SystemClock_Config(void)
 }
 
 /**
+  * @brief CRC Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_CRC_Init(void)
+{
+
+  /* USER CODE BEGIN CRC_Init 0 */
+
+  /* USER CODE END CRC_Init 0 */
+
+  /* USER CODE BEGIN CRC_Init 1 */
+
+  /* USER CODE END CRC_Init 1 */
+  hcrc.Instance = CRC;
+  if (HAL_CRC_Init(&hcrc) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN CRC_Init 2 */
+
+  /* USER CODE END CRC_Init 2 */
+
+}
+
+/**
   * @brief RTC Initialization Function
   * @param None
   * @retval None
@@ -271,7 +297,6 @@ static void MX_RTC_Init(void)
   RTC_DateTypeDef DateToUpdate = {0};
 
   /* USER CODE BEGIN RTC_Init 1 */
-
   /* USER CODE END RTC_Init 1 */
   /** Initialize RTC Only 
   */
@@ -284,6 +309,8 @@ static void MX_RTC_Init(void)
   }
 
   /* USER CODE BEGIN Check_RTC_BKUP */
+  // we don't want to init RTC values
+  return;
     
   /* USER CODE END Check_RTC_BKUP */
 
@@ -499,6 +526,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
+	tx_printf("ERROR_HANDLER called\n");
   /* User can add his own implementation to report the HAL error return state */
   while(1)
   {
@@ -517,6 +545,7 @@ void Error_Handler(void)
 void assert_failed(uint8_t *file, uint32_t line)
 { 
   /* USER CODE BEGIN 6 */
+	tx_printf("assert_failed: line %i, %s\n", line, file);
   /* User can add his own implementation to report the file name and line number,
      tex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
   /* USER CODE END 6 */

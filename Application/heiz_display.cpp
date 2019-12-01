@@ -16,12 +16,11 @@
 #include <main.h>
 
 
-uint32_t Heiz_display::setup_vals[SETUP_VALS_LEN];
+//uint32_t Heiz_display::setup_vals[SETUP_VALS_LEN];
 uint32_t Heiz_display::bttn_states[BTTN_STATES_LEN];
 char     Heiz_display::date_time_str[DATE_TIME_LEN];
 char     Heiz_display::tag_nacht[TAGT_NACHT_LEN];
 uint8_t  Heiz_display::curr_page = 0xFF; // 0xFF = init
-// FIXME State_Machine::betrieb_enum Heiz_display::old_betrieb;
 
 
 
@@ -37,27 +36,32 @@ NexNumber n0_pmp1_max	= NexNumber(0,  3, "n0_pmp1_max");
 NexNumber n0_paus1_max	= NexNumber(0,  7, "n0_paus1_max");
 NexNumber n0_pmp2_max	= NexNumber(0,  8, "n0_pmp2_max");
 NexNumber n0_paus2_max  = NexNumber(0,  9, "n0_paus2_max");
-NexNumber n0_paus2_sm   = NexNumber(0, 24, "n0_paus2_sm");
+//NexNumber n0_paus2_sm   = NexNumber(0, 24, "n0_paus2_sm");
 NexNumber n0_second     = NexNumber(0, 23, "n0_second");
 NexText   t0_date_time  = NexText  (0, 33, "t0_date_time");
 
+NexProgressBar j0_pmp1  = NexProgressBar(0, 2, "j0_pmp1");
+NexProgressBar j0_paus1  = NexProgressBar(0, 4, "j0_paus1");
+NexProgressBar j0_pmp2  = NexProgressBar(0, 5, "j0_pmp2");
+NexProgressBar j0_paus2  = NexProgressBar(0, 6, "j0_paus2");
 
-// page 1, setup values. we need to get them, if Exit-button was released.
-NexNumber  n1_day       = NexNumber(1, 22, "page1.n1_day");
-NexNumber  n1_month     = NexNumber(1, 23, "page1.n1_month");
-NexNumber  n1_year      = NexNumber(1, 24, "page1.n1_year");
-NexNumber  n1_hour      = NexNumber(1, 27, "page1.n1_hour");
-NexNumber  n1_minute    = NexNumber(1, 28, "page1.n1_minute");
 NexNumber  n1_pmp1_max  = NexNumber(1, 5,  "page1.n1_pmp1_max");
 NexNumber  n1_paus1_max = NexNumber(1, 6,  "page1.n1_paus1_max");
 NexNumber  n1_pmp2_max  = NexNumber(1, 7,  "page1.n1_pmp2_max");
 NexNumber  n1_paus2_max = NexNumber(1, 8,  "page1.n1_paus2_max");
 
-NexVariable va1_checksum = NexVariable(1, 42, "page1.va1_checksum");
 NexVariable va0_modus	= NexVariable(0, 32, "va0_modus");
 
-NexButton b1_Exit	   	= NexButton(1, 9, 	 "b1_Exit");
+NexNumber  n2_day       = NexNumber(2, 2, "page2.n2_day");
+NexNumber  n2_month     = NexNumber(2, 3, "page2.n2_month");
+NexNumber  n2_year      = NexNumber(2, 4, "page2.n2_year");
+NexNumber  n2_hour      = NexNumber(2, 7, "page2.n2_hour");
+NexNumber  n2_minute    = NexNumber(2, 8, "page2.n2_minute");
+
 NexButton b0_setup      = NexButton(0, 11, 	 "b0_setup");
+NexButton b1_Exit	   	= NexButton(1, 9, 	 "b1_Exit");
+NexButton b0_timedate   = NexButton(0, 24, 	 "b0_timedate");
+NexButton b2_Exit  		= NexButton(2, 1, 	 "b2_Exit");
 NexDSButton bt0_pmp1	= NexDSButton(0, 18, "bt0_pmp1");
 NexDSButton bt0_pmp2	= NexDSButton(0, 21, "bt0_pmp2");
 NexDSButton b0_modus	= NexDSButton(0, 1,  "b0_modus");
@@ -67,83 +71,44 @@ NexTouch* nex_listen_list[] =
 {
 		&b1_Exit,
 		&b0_setup,
+		&b0_timedate,
+		&b2_Exit,
 		&bt0_pmp1,
 		&bt0_pmp2,
 		&b0_modus,
 		NULL
 };
 
-NexNumber* page1_setup_list[] =
-{
-		&n1_pmp1_max  ,
-		&n1_paus1_max ,
-		&n1_pmp2_max  ,
-		&n1_paus2_max ,
-		&n1_day       ,
-		&n1_month     ,
-		&n1_year      ,
-		&n1_hour      ,
-		&n1_minute    ,
-		NULL
-};
 
 void b1_Exit_PopCallback(void *ptr)
 {
 	UNUSED(ptr);
 
-	uint32_t chksum_ist=0, chksum_soll=0;
-	NexNumber *e = NULL;
-	uint8_t i;
-	uint32_t tmp_setup_vals[SETUP_VALS_LEN];
-
+	uint32_t tmpVal = 0;
 	MainMachine* mMach = Common::get_mainMachine();
+	ValueStorage* vs = Common::get_valueStorage();
+	ValueStorage::RtcBackupType rtcStorage = vs->getBlock();
 
+	n1_pmp1_max.getValue(&tmpVal);
+	rtcStorage.tactiveMax_winter_1 = static_cast<uint8_t>(tmpVal);
+	mMach->set_tactiveMax_winter(0, tmpVal * 6000);
 
-	for(i = 0; (e = page1_setup_list[i]) != NULL; i++)
-	{
-		e->getValue(&tmp_setup_vals[i]);
-		chksum_soll += tmp_setup_vals[i];
-	}
+	n1_paus1_max.getValue(&tmpVal);
+	rtcStorage.tpauseMax_winter_1  = static_cast<uint8_t>(tmpVal);
+	mMach->set_tpauseMax_winter(0,  tmpVal * 60000);
 
-	va1_checksum.getValue(&chksum_ist);
+	n1_pmp2_max.getValue(&tmpVal);
+	rtcStorage.tactiveMax_winter_2 = static_cast<uint8_t>(tmpVal);
+	mMach->set_tactiveMax_winter(1, tmpVal * 60000);
 
-	if (chksum_ist == chksum_soll)
-	{
-		Common::get_rtcSocket()->set_time_date(&tmp_setup_vals[0]);
+	n1_paus2_max.getValue(&tmpVal);
+	rtcStorage.tpauseMax_winter_2  = static_cast<uint8_t>(tmpVal);
+	mMach->set_tpauseMax_winter(1,  tmpVal * 60000);
 
-		// TODO we could always set values now?
-		//if (mMach->get_state() != MainMachine::summer)
-		{
-			// save to backup
-			for (uint32_t i=0; i < Heiz_display::paus2_max+1; i++)
-			{
-				Common::get_rtcSocket()->save_backup_value(tmp_setup_vals[i], i+1);
-				Common::get_heizDisplay()->setup_vals[i] = tmp_setup_vals[i];
-			}
-
-			mMach->set_tactiveMax_winter(0, tmp_setup_vals[Heiz_display::pmp1_max] * 60000);
-			mMach->set_tpauseMax_winter(0, tmp_setup_vals[Heiz_display::paus1_max] * 60000);
-			mMach->set_tactiveMax_winter(1, tmp_setup_vals[Heiz_display::pmp2_max] * 60000);
-			mMach->set_tpauseMax_winter(1, tmp_setup_vals[Heiz_display::paus2_max] * 60000);
-		}
-
-
-	}
+	vs->storeBlock(rtcStorage);
 
 	sendCommand("page 0");
 	Heiz_display::curr_page = 0;
-
-	// TODO remove?
-	//  if (Common::machine->get_modus() == State_Machine::mod_sommer)
-	//	Common::heiz_disp->modus_sommer_active();
-	//
-	//  if ( (Common::machine->get_betrieb() == State_Machine::bet_nacht)
-	//	  && (Common::machine->get_modus() == State_Machine::mod_winter) )
-	//	{
-	//	  return;
-	//	}
-	//
-	//  Common::machine->next_state();
 }
 
 void bt0_setup_PopCallback(void *ptr)
@@ -152,6 +117,47 @@ void bt0_setup_PopCallback(void *ptr)
 
 	sendCommand("page 1");
 	Heiz_display::curr_page = 1;
+}
+
+void b0_timedate_PopCallback(void *ptr)
+{
+	UNUSED(ptr);
+	sendCommand("page 2");
+	Heiz_display::curr_page = 2;
+}
+
+void b2_Exit_PopCallback(void *ptr)
+{
+	UNUSED(ptr);
+
+	uint32_t tmpVal = 0;
+
+	ValueStorage* vs = Common::get_valueStorage();
+	ValueStorage::RtcBackupType rtcStorage = vs->getBlock();
+
+	n2_day.getValue(&tmpVal);
+	rtcStorage.day = static_cast<uint8_t>(tmpVal);
+
+	n2_month.getValue(&tmpVal);
+	rtcStorage.month = static_cast<uint8_t>(tmpVal);
+
+	n2_year.getValue(&tmpVal);
+	rtcStorage.year = static_cast<uint8_t>(tmpVal);
+
+	vs->storeBlock(rtcStorage);
+	Common::get_rtcSocket()->set_date(
+			rtcStorage.day, rtcStorage.month, rtcStorage.year);
+
+	n2_hour.getValue(&tmpVal);
+	uint8_t hour = static_cast<uint8_t>(tmpVal);
+
+	n2_minute.getValue(&tmpVal);
+	uint8_t min = static_cast<uint8_t>(tmpVal);
+
+	Common::get_rtcSocket()->set_time(hour, min, 0u);
+
+	sendCommand("page 0");
+	Heiz_display::curr_page = 0;
 }
 
 void bt0_pmp1_PopCallback(void *ptr)
@@ -190,114 +196,91 @@ void bt0_pmp2_PopCallback(void *ptr)
 void b0_modus_PopCallback(void *ptr)
 {
 	UNUSED(ptr);
-	MainMachine* mm = Common::get_mainMachine();
+	MainMachine* mm  = Common::get_mainMachine();
+	ValueStorage* vs = Common::get_valueStorage();
+	ValueStorage::RtcBackupType rtcStorage = vs->getBlock();
 
 	MainMachine::enm_states currState = mm->get_state();
 
-	if (currState == MainMachine::winter)
+	if (currState == MainMachine::winter) {
 		mm->set_state(MainMachine::summer);
-	else if (currState == MainMachine::summer)
+		rtcStorage.MainMachineState = MainMachine::summer;
+	}
+	else if (currState == MainMachine::summer) {
 		mm->set_state(MainMachine::manual);
+		rtcStorage.MainMachineState = MainMachine::manual;
+	}
 	else if (currState == MainMachine::manual) {
 		mm->set_state(MainMachine::winter);
+		rtcStorage.MainMachineState = MainMachine::winter;
 		Common::get_heizDisplay()->inactivate_pump_bttns();
 	}
 
 	Common::get_heizDisplay()->upd_page_0();
+	vs->storeBlock(rtcStorage);
 }
 
 
 Heiz_display::Heiz_display ()
 {
 	b1_Exit.attachPop (b1_Exit_PopCallback, 	&b1_Exit);
-	b0_setup.attachPop(bt0_setup_PopCallback, &b0_setup);
+	b0_setup.attachPop(bt0_setup_PopCallback, 	&b0_setup);
 	bt0_pmp1.attachPop(bt0_pmp1_PopCallback, 	&bt0_pmp1);
 	bt0_pmp2.attachPop(bt0_pmp2_PopCallback, 	&bt0_pmp2);
 	b0_modus.attachPop(b0_modus_PopCallback, 	&b0_modus);
-
-	// RTC-Backup holen
-	for (uint32_t i=0; i < (paus2_max+1); i++)
-	{
-		uint32_t value = Common::get_rtcSocket()->read_backup_value(i+1);
-		if (value < 1)
-			setup_vals[i] = 1;
-		else if (value > 60)
-			setup_vals[i] = 60;
-		else
-			setup_vals[i] = value;
-	}
-
-
-
-
-
-	// modus_winter_active();
-
-	setup_vals[pmp1_summer_max]  = PMP1_SOMMER_MAX	;
-	setup_vals[paus1_summer_max] = PAUS1_SOMMER_MAX	;
-	setup_vals[pmp2_summer_max]  = PMP2_SOMMER_MAX	;
-	setup_vals[paus2_summer_max] = WHOLE_WEEK_MINUTES ;
-
-
-	MainMachine* mMach = Common::get_mainMachine();
-	mMach->set_tactiveMax_winter(0, setup_vals[Heiz_display::pmp1_max] * 60000);
-	mMach->set_tpauseMax_winter(0, setup_vals[Heiz_display::paus1_max] * 60000);
-	mMach->set_tactiveMax_winter(1, setup_vals[Heiz_display::pmp2_max] * 60000);
-	mMach->set_tpauseMax_winter(1, setup_vals[Heiz_display::paus2_max] * 60000);
-
-
-	//  if (Common::machine->get_betrieb() == State_Machine::bet_nacht)
-	//	old_betrieb = State_Machine::bet_tag;
-	//  else
-	//	old_betrieb = State_Machine::bet_nacht;
-
+	b0_timedate.attachPop(b0_timedate_PopCallback, &b0_timedate);
+	b2_Exit.attachPop(b2_Exit_PopCallback, 		&b1_Exit);
 }
 
 void Heiz_display::loop(void)
 {
-	static bool 	init_setup_vals = false;
+	static bool init_disp_vals = false;
 
 	nexLoop(nex_listen_list);
-	Common::get_rtcSocket()->get_time_date(setup_vals);
+
+	RTC_TimeTypeDef sTime;
+	RTC_DateTypeDef sDate;
+	Common::get_rtcSocket()->get_time_date(&sTime, &sDate);
+
+	ValueStorage* vs = Common::get_valueStorage();
+	ValueStorage::RtcBackupType rtcStorage = vs->getBlock();
 
 	// initialize
-	if (Heiz_display::curr_page == 0xFF)
-	{
-		Common::get_rtcSocket()->restore_date(setup_vals);
+	if (Heiz_display::curr_page == 0xFF) {
 		nexInit();
 		Heiz_display::curr_page = 0;
 		upd_page_0();
+
+		n0_pmp1_max.setValue( rtcStorage.tactiveMax_winter_1);
+		n0_paus1_max.setValue(rtcStorage.tpauseMax_winter_1 );
+		n0_pmp2_max.setValue( rtcStorage.tactiveMax_winter_2);
+		n0_paus2_max.setValue(rtcStorage.tpauseMax_winter_2 );
 	}
 
-
-	if (Heiz_display::curr_page == 0)
-	{
-		init_setup_vals = false;
+	if (Heiz_display::curr_page == 0) {
+		init_disp_vals = false;
 
 		upd_page_0();
-		n0_second.setValue(setup_vals[second]);
+		n0_second.setValue(sTime.Seconds);
 
-		// store changed date
-		if ( (setup_vals[minute] == 0) && (setup_vals[hour] == 0) && (setup_vals[second] == 0) )
-			Common::get_rtcSocket()->set_date(setup_vals);
+		// store changed date at 0:00h
+		if ( (sTime.Minutes == 0) && (sTime.Hours == 0) && (sTime.Seconds == 0) ) {
+			Common::get_valueStorage()->storeDate(
+					sDate.WeekDay, sDate.Month, sDate.Year);
+		}
 	}
 
-	if ( (Heiz_display::curr_page == 1) && (init_setup_vals == false) )
-	{
-		init_setup_vals = true;
+	if ( (Heiz_display::curr_page == 2) && (init_disp_vals == false) ) {
+		init_disp_vals = true;
 
-		Common::get_rtcSocket()->get_time_date(&setup_vals[0]);
-		n1_day.setValue(setup_vals[Heiz_display::day]);
-		n1_month.setValue(setup_vals[Heiz_display::month]);
-		n1_year.setValue(setup_vals[Heiz_display::year]);
-		n1_hour.setValue(setup_vals[Heiz_display::hour]);
-		n1_minute.setValue(setup_vals[Heiz_display::minute]);
+
+		n2_day.setValue(sDate.WeekDay);
+		n2_month.setValue(sDate.Month);
+		n2_year.setValue(sDate.Year);
+		n2_hour.setValue(sTime.Hours);
+		n2_minute.setValue(sTime.Minutes);
 	}
-
 }
-
-
-
 
 void Heiz_display::upd_page_0(void)
 {
@@ -315,22 +298,37 @@ void Heiz_display::upd_op_times(void)
 	n0_pmp1_curr. setValue((opTimes.tactive_winter + 59900) / 60000 );
 	n0_paus1_curr.setValue((opTimes.tpause_winter  + 59900) / 60000 );
 
+	if (opTimes.state == StateMachineInterface::active) {
+		j0_pmp1.Set_font_color_pco(5862u);
+		j0_paus1.Set_font_color_pco(31u);
+	}
+	else if (opTimes.state == StateMachineInterface::pause) {
+		j0_pmp1.Set_font_color_pco(31u);
+		j0_paus1.Set_font_color_pco(5862u);
+	}
+	else if ( (opTimes.state == StateMachineInterface::ready)
+			|| (opTimes.state == StateMachineInterface::init) ) {
+		j0_pmp1.Set_font_color_pco(31u);
+		j0_paus1.Set_font_color_pco(31u);
+	}
+
 	opTimes = mm->get_opTimes(1);
 	n0_pmp2_curr. setValue((opTimes.tactive_winter + 59900) / 60000 );
 	n0_paus2_curr.setValue((opTimes.tpause_winter  + 59900) / 60000 );
 
-
-
-	// FIXME set summer pause time?
-	/*if (Common::machine->get_modus() == State_Machine::mod_sommer) {
-		n0_paus2_sm.setValue(op_times[State_Machine::op_paus2]);
-		n0_paus2_curr.setValue(0);
+	if (opTimes.state == StateMachineInterface::active) {
+		j0_pmp2.Set_font_color_pco(5862u);
+		j0_paus2.Set_font_color_pco(31u);
 	}
-	else {
-		n0_paus2_sm.setValue(0);
-		n0_paus2_curr.setValue(op_times[State_Machine::op_paus2]);
-	}*/
-
+	else if (opTimes.state == StateMachineInterface::pause) {
+		j0_pmp2.Set_font_color_pco(31u);
+		j0_paus2.Set_font_color_pco(5862u);
+	}
+	else if ( (opTimes.state == StateMachineInterface::ready)
+			|| (opTimes.state == StateMachineInterface::init) ) {
+		j0_pmp2.Set_font_color_pco(31u);
+		j0_paus2.Set_font_color_pco(31u);
+	}
 }
 
 void Heiz_display::inactivate_pump_bttns(void)
@@ -373,25 +371,6 @@ void  Heiz_display::upd_time_date_str(void)
 	t0_date_time.setText(time_str.c_str());
 }
 
-// TODO wer ruft die auf?
-void Heiz_display::modus_sommer_active(void)
-{
-	n0_pmp1_max.setValue(setup_vals[pmp1_summer_max]);
-	n0_paus1_max.setValue(setup_vals[paus1_summer_max]);
-	n0_pmp2_max.setValue(setup_vals[pmp2_summer_max]);
-	//n0_paus2_max.setValue(WHOLE_WEEK_MINUTES); // whole week
-	n0_paus2_max.setValue(0);
-}
-
-// TODO wer ruft die auf?
-void Heiz_display::modus_winter_active(void)
-{
-	n0_pmp1_max.setValue(setup_vals[pmp1_max]);
-	n0_paus1_max.setValue(setup_vals[paus1_max]);
-	n0_pmp2_max.setValue(setup_vals[pmp2_max]);
-	n0_paus2_max.setValue(setup_vals[paus2_max]);
-}
-
 String	Heiz_display::time_date_to_str(
 		RTC_TimeTypeDef sTime, RTC_DateTypeDef sDate)
 {
@@ -412,7 +391,7 @@ String	Heiz_display::time_date_to_str(
 	if(sDate.WeekDay == 0)
 		time_str += "So ";
 
-	if (sDate.Date< 10)
+	if (sDate.Date < 10)
 		time_str += "0";
 	HelpersLib::num2str(&time_str, (uint32_t) sDate.Date);
 	if (sDate.Month< 10)
@@ -455,52 +434,4 @@ bool Heiz_display::get_bttn_pmp2(void)
 
 	return false;
 }
-
-/*
-  HAL_GPIO_TogglePin(LED_02_GPIO_Port, LED_02_Pin);
-
-  String msg_str = "curr_state: ";
-  HelpersLib::num2str(&msg_str, curr_state);
-  msg_str += " curr_time: ";
-  HelpersLib::num2str(&msg_str, *curr_time);
-  msg_str += "\n";
-  Error_messaging::write(msg_str.c_str());
-
-
-  String msg_str = "get_time: ";
-  HelpersLib::num2str(&msg_str, Common::rtc->get_time_minutes());
-  msg_str += " ";
-  HelpersLib::num2str(&msg_str, target_time);
-  msg_str += " ";
-
-
-  msg_str += " curr_time: ";
-  HelpersLib::num2str(&msg_str, *curr_time);
-  msg_str += "\n";
-  Error_messaging::write(msg_str.c_str());
-
-	  op_times[op_pmp1] = 12;
-	  String msg_str = "optimes: ";
-	  HelpersLib::num2str(&msg_str, op_times[op_pmp1]);
-	  msg_str += " setupval: ";
-	  HelpersLib::num2str(&msg_str, Common::heiz_disp->get_setup_vals()[Heiz_display::pmp1_max]);
-	  msg_str += "\n";
-	  Error_messaging::write(msg_str.c_str());
-
-
-
-  String msg_str = "bt0_pmp2_state: ";
-  HelpersLib::num2str(&msg_str, *state );
-  msg_str += "\n";
-  Error_messaging::write(msg_str.c_str());
-
-  String msg_str = "bt0_pmp1_state: ";
-  HelpersLib::num2str(&msg_str, *state );
-  msg_str += "\n";
-  Error_messaging::write(msg_str.c_str());
-
-
-
- */
-
 

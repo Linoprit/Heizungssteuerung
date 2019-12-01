@@ -35,18 +35,18 @@ how to test:
 
 // must be defined outside the class
 bool operator ==(const RTC_TimeTypeDef right, const RTC_TimeTypeDef left);
-
+/**
+ * Remove date-setting in stm32f1xx_hal_rtc.c, line 336ff
+ * Remove RTC-value initialization in main.c, MX_RTC_Init()
+ */
 class RtcSocket {
 public:
 	RtcSocket(RTC_HandleTypeDef*  rtc_handle);
 	virtual ~RtcSocket() { };
 
-	void set_time_date(uint32_t* setup_vals);
-	void set_date(uint32_t* setup_vals);
-	void set_time(uint32_t* setup_vals);
-	void restore_date(uint32_t* setup_vals);
+	void set_date(uint8_t day, uint8_t month, uint8_t year);
+	void set_time(uint8_t hour, uint8_t min, uint8_t sec);
 
-	void get_time_date(uint32_t* setup_vals);
 	void get_time_date(RTC_TimeTypeDef *sTime, RTC_DateTypeDef *sDate);
 	RTC_DateTypeDef   get_date(void);
 	RTC_TimeTypeDef   get_time(void);
@@ -56,8 +56,6 @@ public:
 	RTC_DateTypeDef operator = (const RTC_DateTypeDef right);
 	RTC_TimeTypeDef operator = (const RTC_TimeTypeDef right);
 
-	void 		save_backup_value(uint32_t Data, uint8_t BackupRegister);
-	uint32_t 	read_backup_value(uint8_t BackupRegister);
 	void 		save_backup_struct(uint16_t* const Data, uint8_t lenInBytes);
 	void 		read_backup_struct(uint16_t* Data, uint8_t lenInBytes);
 
@@ -65,6 +63,8 @@ public:
 private:
 	RTC_HandleTypeDef*  rtc_handle;
 
+	void 		save_backup_value(uint32_t Data, uint8_t BackupRegister);
+	uint32_t 	read_backup_value(uint8_t BackupRegister);
 };
 
 #endif /* SOCKETS_RTCSOCKET_H_ */

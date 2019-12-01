@@ -185,7 +185,7 @@ typedef struct
 
   RTC_InitTypeDef             Init;       /*!< RTC required parameters  */ 
 
-  RTC_DateTypeDef             DateToUpdate;       /*!< Current date set by user and updated automatically  */ 
+  RTC_DateTypeDef             DateToUpdate;       /*!< Current date set by user and updated automatically  */
 
   HAL_LockTypeDef             Lock;       /*!< RTC locking object       */
 

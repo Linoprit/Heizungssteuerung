@@ -10,8 +10,7 @@
 #include "cmsis_os.h"
 #include "main.h"
 #include <Instances/Common.h>
-
-#include <TestWString.h>
+#include <ValueStorage.h>
 
 
 #define DO_PRINT_DSPLTSK
@@ -22,16 +21,10 @@ void StartDisplayTsk(void const * argument)
 {
 	UNUSED(argument);
 
-	Common::init();
-
-
-
 	/*uint8_t buff[9] ;
 	//HAL_StatusTypeDef result;
 	for (uint8_t i=0; i < 9; i++)
 		buff[i] = '\0';*/
-
-
 
 
 
@@ -46,9 +39,19 @@ void StartDisplayTsk(void const * argument)
 
 
 
+		// TODO
+		// - Sleep Screen
+		// - watchdog
 
 
+
+
+
+		//HAL_GPIO_WritePin(LED_03_GPIO_Port, LED_03_Pin, GPIO_PIN_SET);
+		//HAL_GPIO_WritePin(LED_03_GPIO_Port, LED_03_Pin, GPIO_PIN_RESET);
 		//HAL_GPIO_TogglePin(LED_03_GPIO_Port, LED_03_Pin);
+		//HAL_GPIO_WritePin(LED_04_GPIO_Port, LED_04_Pin, GPIO_PIN_SET);
+		//HAL_GPIO_WritePin(LED_04_GPIO_Port, LED_04_Pin, GPIO_PIN_RESET);
 		//HAL_GPIO_TogglePin(LED_04_GPIO_Port, LED_04_Pin);
 
 #ifdef DO_PRINT_DSPLTSK

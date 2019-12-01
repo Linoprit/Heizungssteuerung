@@ -27,9 +27,11 @@ public:
 		uint32_t tpauseMax_winter;
 		uint32_t tactive_winter;
 		uint32_t tpause_winter;
+		StateMachineInterface::enm_states
+			state;
 		uint32_t tactive_summer;
 		uint32_t tpause_summer;
-		bool     pumpActive;
+		bool     isPumpActive;
 	} __attribute__ ((packed)) ;
 
 	struct OpStatesStruct {
@@ -70,6 +72,8 @@ public:
 
 	uint32_t get_tactive_summer(int8_t pumpID) { return _summerScheduler->get_tactive(pumpID); };
 	uint32_t get_tpause_summer(int8_t pumpID)  { return _summerScheduler->get_tpause(pumpID);  };
+	StateMachineInterface::enm_states get_state_summer(int8_t pumpID) {
+		return _summerScheduler->get_state(pumpID); };
 
 
 private:
