@@ -68,8 +68,8 @@ void ValueStorage::fillInDefaultVals(RtcBackupType* rtcBackup) {
 	rtcBackup->tpauseMax_winter_1  = 15u;
 	rtcBackup->tactiveMax_winter_2 = 5u;
 	rtcBackup->tpauseMax_winter_2  = 20u;
-	rtcBackup->day                 = 1u;
-	rtcBackup->month               = 1u;
+	rtcBackup->day                 = 26u;
+	rtcBackup->month               = 4u;
 	rtcBackup->year                = 20u;
 	rtcBackup->MainMachineState    = MainMachine::winter;
 }

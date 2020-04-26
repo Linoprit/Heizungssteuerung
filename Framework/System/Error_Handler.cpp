@@ -16,7 +16,7 @@ void error_handler(const char* file, uint32_t line)
 {
 	HAL_GPIO_TogglePin(LED_04_GPIO_Port, LED_04_Pin);
 
-	printf("Exception in %s, line: %ld\n", file, line);
+	tx_printf("Exception in %s, line: %ld\n", file, line);
 
 	while (1) { }; // infinite loop
 }

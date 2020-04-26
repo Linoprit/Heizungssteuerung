@@ -62,13 +62,7 @@ public:
   void  upd_op_times(void);
   void 	upd_page_0(void);
 
-  //void modus_sommer_active(void);
-  //void modus_winter_active(void);
-
   String time_date_to_str(RTC_TimeTypeDef sTime, RTC_DateTypeDef sDate);
-
-  // TODO remove setup_vals datatype
- // static uint32_t setup_vals[SETUP_VALS_LEN]; // corresponding to page1_setup_list
 
   // display interface. must be public
   static uint32_t bttn_states[BTTN_STATES_LEN];

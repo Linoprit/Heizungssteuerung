@@ -6,15 +6,15 @@
  */
 
 #include "uart_printf.h"
-#include "cmsis_os.h"
 #include <stdio.h>
 #include <stdarg.h>
 #include <main.h>
 #include <Instances/Common.h>
 
-
-extern UART_HandleTypeDef* get_huart1(void);
+// which UART to use as debug-port
 #define UART_PORT get_huart1()
+#define USE_DMA 1 // DMA transmit on UART2 doesn't work on Nucleo F303
+
 
 #define TX_BUFF_LEN 128
 uint8_t txBuff[TX_BUFF_LEN];
@@ -22,7 +22,7 @@ uint16_t tx_act_pos = 0;
 
 
 #ifndef min
-#define min(a,b)            (((a) < (b)) ? (a) : (b))
+#define min(a,b)   (((a) < (b)) ? (a) : (b))
 #endif
 
 /*
@@ -35,39 +35,29 @@ uint16_t tx_act_pos = 0;
 
 int tx_printf(const char *format, ...)
 {
-	const uint16_t timeout = 0x00FF;
-	volatile uint16_t count = 0;
-
-	if(common_initIsDone()) {
-		HAL_UART_StateTypeDef uart_status = HAL_UART_GetState(UART_PORT);
-		while ( ( (uart_status != HAL_UART_STATE_READY)  &&
-				(uart_status != HAL_UART_STATE_BUSY_RX) )  )
-		{
-			if(count >= timeout)
-			{
-				return ERROR;
-			}
-			osDelay(1); // locks if os is not started
-			count++;
-			uart_status = HAL_UART_GetState(UART_PORT);
-		}
-	}
-
 	tx_buff_clear();
 
 	va_list arg;
 	va_start (arg, format);
-	//done = vfprintf (stdout, format, arg);
 	tx_act_pos = vsprintf ((char*) &txBuff[0], format, arg);
 	va_end (arg);
 
+	HAL_StatusTypeDef result = HAL_OK;
+#if (USE_DMA)
 	if(common_initIsDone()) {
-		HAL_UART_Transmit_DMA(UART_PORT, &txBuff[0], tx_act_pos);
-	} else {
-		HAL_UART_Transmit(UART_PORT, &txBuff[0], tx_act_pos, 200);
-	}
+		result = HAL_UART_Transmit_DMA(UART_PORT, &txBuff[0], tx_act_pos);
 
-	return SUCCESS;
+	} else {
+		result = HAL_UART_Transmit(UART_PORT, &txBuff[0], tx_act_pos, 200);
+	}
+#else
+	result = HAL_UART_Transmit_IT(UART_PORT, &txBuff[0], tx_act_pos);
+#endif
+
+	if (result == HAL_OK)
+		return SUCCESS;
+	else
+		return ERROR;
 }
 
 void tx_buff_clear(void)

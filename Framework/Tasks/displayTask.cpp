@@ -37,8 +37,6 @@ void StartDisplayTsk(void const * argument)
 
 		hdsp->loop();
 
-
-
 		// TODO
 		// - Sleep Screen
 		// - watchdog

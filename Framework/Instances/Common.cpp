@@ -15,13 +15,13 @@
 
 
 uart_socket*			Common::displaySocket	= NULL;
-nextion*				Common::nexDevice		= NULL;
+nextion*					Common::nexDevice		= NULL;
 Heiz_display*			Common::heizDisplay		= NULL;
 RtcSocket*				Common::rtcSocket		= NULL;
 MainMachine*			Common::mainMachine		= NULL;
 CrcSocket*				Common::crcSocket		= NULL;
 ValueStorage*			Common::valueStorage	= NULL;
-bool					Common::_initIsDone 	= false;
+bool							Common::_initIsDone 	= false;
 
 
 
